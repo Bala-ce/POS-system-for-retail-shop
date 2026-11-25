@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ta">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <title>Modern POS System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Main Application Container -->
+    <div id="app">
+        <div id="payment-modal" class="modal hidden">
+            <div class="modal-content card" style="padding: 30px;">
+                <button class="close-btn" onclick="closePaymentModal()">×</button>
+                <h2 data-en="Payment Settlement" data-ta="பணம் செலுத்துதல்">Payment Settlement</h2>
+                <input type="hidden" id="modal-account-id">
+                <div class="form-group mt-4">
+                    <label data-en="Current Balance:" data-ta="தற்போதைய பாக்கி:">Current Balance:</label>
+                    <b id="modal-current-balance" class="text-danger" style="font-size:24px;">₹0.00</b>
+                </div>
+                <div class="form-group mt-4">
+                    <label data-en="Paid Amount:" data-ta="செலுத்தும் தொகை:">Paid Amount:</label>
+                    <input type="number" id="modal-paid-amount" step="0.01" min="0"
+                        style="font-size: 20px; padding: 10px;">
+                </div>
+                <div class="form-group mt-4">
+                    <button class="btn-primary full-width" onclick="submitPayment()" data-en="Submit Payment"
+                        data-ta="சமர்ப்பி">Submit Payment</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- On-Screen Thermal Bill Preview Modal -->
+        <div id="bill-preview-modal" class="modal hidden notranslate" translate="no">
+            <div class="modal-content card bill-preview-card notranslate" translate="no">
+                <div class="bill-preview-header">
+                    <div>
+                        <h2 class="notranslate" translate="no">பில் சரிபார்ப்பு / Bill Preview</h2>
+                        <div class="bill-preview-sub">
+                            <span class="preview-badge" id="preview-paper-badge">80mm Thermal Receipt</span>
+                            <span class="preview-mode-toggle">
+                                <button type="button" class="mode-btn active" id="btn-mode-80mm"
+                                    onclick="switchThermalPaperSize('80mm')">80mm</button>
+                                <button type="button" class="mode-btn" id="btn-mode-58mm"
+                                    onclick="switchThermalPaperSize('58mm')">58mm</button>
+                            </span>
+                        </div>
+                    </div>
+                    <button class="modal-close-icon" onclick="closeBillPreview()" title="Close / Cancel">×</button>
+                </div>
+
+                <!-- Live visual preview box styled like an actual paper roll with gray background and paper margins -->
+                <div class="thermal-roll-viewport">
+                    <div id="receipt-preview-content" class="thermal-receipt-paper paper-80mm notranslate"
+                        translate="no">
+                        <!-- Complete formatted Tamil receipt dynamically rendered here -->
+                    </div>
+                </div>
+
+                <!-- Modal Action Buttons -->
+                <div class="bill-preview-actions">
+                    <button id="modal-cancel-btn" class="btn-cancel-bill notranslate" translate="no"
+                        onclick="closeBillPreview()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path
+                                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                        </svg>
+                        <span>திருத்து / Edit Bill (Cancel)</span>
+                    </button>
+                    <button id="modal-print-btn" class="btn-print-bill notranslate" translate="no"
+                        onclick="confirmPrintBill()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path
+                                d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" />
+                        </svg>
+                        <span>பிரிண்ட் செய்யவும் (Print Bill)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Stock Item Modal -->
+        <div id="edit-product-modal" class="modal hidden notranslate">
+            <div class="modal-content card" style="max-width: 500px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 25px;">
+                <button class="close-btn" onclick="closeEditProductModal()">×</button>
+                <h2 data-en="Edit Stock Item" data-ta="சரக்கு பொருளை திருத்துதல்" style="margin-bottom: 16px;">சரக்கு பொருளை திருத்துதல்</h2>
+                <input type="hidden" id="edit-prod-id">
+                <input type="hidden" id="edit-prod-current-image-url">
+
+                <div class="edit-img-section mb-15">
+                    <label class="font-bold mb-6 block" data-en="Item Image:" data-ta="பொருளின் படம்:">பொருளின் படம்:</label>
+                    <div class="edit-img-preview-wrapper">
+                        <img id="edit-prod-img-preview" src="" alt="Product Preview" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--secondary); background: #ffffff; display: none;">
+                        <div id="edit-prod-no-img" class="prod-img-placeholder" style="width: 80px; height: 80px; border-radius: 8px;"></div>
+                        <div class="edit-img-controls">
+                            <input type="file" id="edit-prod-image-file" accept="image/*" onchange="previewEditImage(this)" style="display: none;">
+                            <button type="button" class="btn-sm btn-secondary" onclick="document.getElementById('edit-prod-image-file').click()" data-en="Choose / Change Image" data-ta="படத்தை தேர்ந்தெடுக்க / மாற்ற">படத்தை தேர்ந்தெடுக்க / மாற்ற</button>
+                            <button type="button" class="btn-sm text-danger" id="edit-prod-remove-img" onclick="removeEditProductImage()" style="display: none; background: transparent; border: 1px solid #fca5a5;" data-en="Remove Image" data-ta="படத்தை நீக்கு">படத்தை நீக்கு</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-12">
+                    <label data-en="Product Name (English)" data-ta="பொருளின் பெயர் (English)">பொருளின் பெயர் (English)</label>
+                    <input type="text" id="edit-prod-name-en" required style="width: 100%; padding: 9px; font-size: 15px;">
+                </div>
+
+                <div class="form-group mb-12">
+                    <label data-en="Product Name (Tamil)" data-ta="பொருளின் பெயர் (தமிழ்)">பொருளின் பெயர் (தமிழ்)</label>
+                    <input type="text" id="edit-prod-name-ta" required style="width: 100%; padding: 9px; font-size: 15px;">
+                </div>
+
+                <div class="form-row-2 mb-12">
+                    <div class="form-group">
+                        <label data-en="Cost Price" data-ta="அடக்க விலை">அடக்க விலை</label>
+                        <input type="number" id="edit-prod-cost" step="0.01" style="width: 100%; padding: 9px; font-size: 15px;">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Selling Price" data-ta="விற்பனை விலை">விற்பனை விலை</label>
+                        <input type="number" id="edit-prod-price" step="0.01" style="width: 100%; padding: 9px; font-size: 15px;">
+                    </div>
+                </div>
+
+                <div class="form-group mb-20">
+                    <label data-en="Unit Type" data-ta="அலகு வகை">அலகு வகை</label>
+                    <select id="edit-prod-unit" style="width: 100%; padding: 9px; font-size: 15px;">
+                        <option value="kg">kg (Loose)</option>
+                        <option value="g">g (Loose)</option>
+                        <option value="pcs">pcs (Packaged)</option>
+                        <option value="pkt">pkt (Packaged)</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="btn-secondary" onclick="closeEditProductModal()" data-en="Cancel" data-ta="ரத்து செய்">ரத்து செய்</button>
+                    <button type="button" class="btn-primary" onclick="saveEditProduct()" id="btn-save-edit-prod" data-en="Save Changes" data-ta="சேமிக்கவும்">சேமிக்கவும்</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Invoice Details Modal -->
+        <div id="invoice-details-modal" class="modal hidden notranslate">
+            <div class="modal-content card" style="max-width: 650px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 25px;">
+                <button class="close-btn" onclick="closeInvoiceModal()">×</button>
+                <div class="modal-header-banner mb-15">
+                    <div>
+                        <h2 data-en="Invoice Details" data-ta="பில் விவரங்கள்">பில் விவரங்கள்</h2>
+                        <span id="inv-modal-number" class="badge badge-primary" style="font-size: 15px; margin-top: 4px;">INV-1001</span>
+                    </div>
+                    <span id="inv-modal-payment-badge" class="badge badge-cash">Cash</span>
+                </div>
+
+                <div class="invoice-meta-grid mb-15">
+                    <div class="meta-item">
+                        <span class="meta-label" data-en="Date & Time (DD/MM/YYYY):" data-ta="தேதி & நேரம் (DD/MM/YYYY):">தேதி & நேரம் (DD/MM/YYYY):</span>
+                        <b id="inv-modal-date">-</b>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label" data-en="Customer:" data-ta="வாடிக்கையாளர்:">வாடிக்கையாளர்:</span>
+                        <b id="inv-modal-customer">-</b>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label" data-en="Payment Method:" data-ta="பணம் முறை:">பணம் முறை:</span>
+                        <b id="inv-modal-payment">-</b>
+                    </div>
+                </div>
+
+                <div id="inv-modal-account-alert" class="alert-box alert-warning mb-15" style="display: none;">
+                    <span>⚠️</span>
+                    <span id="inv-modal-account-alert-text">கணக்கில் ஏற்றப்பட்டது</span>
+                </div>
+
+                <table class="data-table mb-15">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th data-en="Item" data-ta="பொருள்">பொருள்</th>
+                            <th data-en="Qty" data-ta="அளவு">அளவு</th>
+                            <th data-en="Price" data-ta="விலை">விலை</th>
+                            <th data-en="Total" data-ta="மொத்தம்">மொத்தம்</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inv-modal-items-tbody"></tbody>
+                </table>
+
+                <div class="inv-summary-box mb-20">
+                    <div class="summary-line">
+                        <span data-en="Subtotal:" data-ta="உப மொத்தம்:">உப மொத்தம்:</span>
+                        <b id="inv-modal-subtotal">₹0.00</b>
+                    </div>
+                    <div class="summary-line" id="inv-modal-discount-line" style="display: none;">
+                        <span data-en="Discount:" data-ta="தள்ளுபடி:">தள்ளுபடி:</span>
+                        <b id="inv-modal-discount" class="text-danger">-₹0.00</b>
+                    </div>
+                    <div class="summary-line grand-total-line">
+                        <span data-en="Total Amount:" data-ta="மொத்த தொகை:">மொத்த தொகை:</span>
+                        <b id="inv-modal-total" class="text-blue" style="font-size: 20px;">₹0.00</b>
+                    </div>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="btn-secondary" onclick="closeInvoiceModal()" data-en="Close" data-ta="மூடு">மூடு</button>
+                    <button type="button" class="btn-primary" onclick="printInvoiceFromModal()" data-en="Print Receipt" data-ta="பிரிண்ட் செய்யவும்">
+                        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;vertical-align:bottom;margin-right:6px;"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+                        <span data-en="Print Receipt" data-ta="பிரிண்ட் செய்யவும்">பிரிண்ட் செய்யவும்</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-target="billing-view" title="Billing System">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                    <span data-en="Billing" data-ta="பில்லிங்">பில்லிங்</span>
+                </button>
+                <button class="nav-btn" data-target="stock-view" title="Stock Management">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                    </svg>
+                    <span data-en="Stock" data-ta="இருப்பு">இருப்பு</span>
+                </button>
+                <button class="nav-btn" data-target="price-view" title="Price Management">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.41l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.41zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" />
+                    </svg>
+                    <span data-en="Prices" data-ta="விலை">விலை</span>
+                </button>
+                <button class="nav-btn" data-target="alerts-view" title="Expiry Alerts">
+                    <svg viewBox="0 0 24 24" id="expiry-bell">
+                        <path
+                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+                    </svg>
+                    <span data-en="Alerts" data-ta="எச்சரிக்கை">எச்சரிக்கை</span>
+                </button>
+                <button class="nav-btn" data-target="invoices-view" title="Invoices">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                    </svg>
+                    <span data-en="Invoices" data-ta="பில்கள்">பில்கள்</span>
+                </button>
+                <button class="nav-btn" data-target="profit-view" title="Profit Analysis">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+                    </svg>
+                    <span data-en="Profit" data-ta="லாபம்">லாபம்</span>
+                </button>
+                <button class="nav-btn" data-target="accounts-view" title="Accounts">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
+                    <span data-en="Accounts" data-ta="கணக்குகள்">கணக்குகள்</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <button id="lang-toggle" class="btn-lang" data-current="ta" title="Switch Language">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.09 13.36 4 12.69 4 12s.09-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c1.84-.63 3.37-1.91 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.34.16-2h4.68c.09.66.16 1.32.16 2 0 .68-.07 1.34-.16 2zm1.63 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.17.64.26 1.31.26 2s-.09 1.36-.26 2h-3.38z" />
+                    </svg>
+                    <span id="lang-label">EN</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- VIEW 1: BILLING (Default) -->
+            <section id="billing-view" class="view-section active pos-layout">
+
+                <!-- Left Panel (Product Catalog & Search) -->
+                <div class="catalog-panel">
+                    <!-- Top Metrics -->
+                    <div class="metrics-row">
+                        <div class="metric-card">
+                            <span data-en="Today's Sales" data-ta="இன்றைய விற்பனை">இன்றைய விற்பனை</span>
+                            <b id="metric-sales">₹0.00</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Invoices" data-ta="பில்கள்">பில்கள்</span>
+                            <b id="metric-invoices">0</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Collected Amount" data-ta="வசூலான தொகை">வசூலான தொகை</span>
+                            <b id="metric-collected">₹0.00</b>
+                        </div>
+                    </div>
+
+                    <!-- Header & Search Bar -->
+                    <div class="catalog-header">
+                        <h2 id="pos-title">🏪 ராஜா நாட்டு மருந்து & பலசரக் கடை</h2>
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="catalog-search" placeholder="பொருளை தேடவும்... / Search products..."
+                                data-en-placeholder="Search products..." data-ta-placeholder="பொருளை தேடவும்...">
+                        </div>
+                    </div>
+
+                    <!-- Catalog List / Grid -->
+                    <div class="catalog-grid" id="catalog-grid">
+                        <!-- Product cards dynamically populated here -->
+                    </div>
+                </div>
+
+                <!-- Right Panel (Invoice & Checkout Column) -->
+                <div class="invoice-panel">
+                    <div class="invoice-header">
+                        <div class="inv-details">
+                            <h3 id="inv-number">INV-1001</h3>
+                            <span id="inv-date">DD/MM/YYYY</span>
+                        </div>
+                        <button id="clear-cart-btn" class="btn-clear" title="Clear Cart">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="billing-customer-bar">
+                        <div class="billing-field">
+                            <label data-en="Customer:" data-ta="வாடிக்கையாளர்:">வாடிக்கையாளர்:</label>
+                            <select id="invoice-customer-select" onchange="onInvoiceCustomerSelect()">
+                                <option value="cash" data-en="Cash Customer" data-ta="ரொக்க வாடிக்கையாளர்">ரொக்க
+                                    வாடிக்கையாளர் (Cash Customer)</option>
+                            </select>
+                        </div>
+                        <div class="billing-field">
+                            <label data-en="Payment:" data-ta="பணம் முறை:">பணம் முறை:</label>
+                            <select id="invoice-payment-method" onchange="onInvoicePaymentMethodChange()">
+                                <option value="Cash" data-en="Cash" data-ta="ரொக்கம் (Cash)">ரொக்கம் (Cash)</option>
+                                <option value="Account" data-en="Account / UPI" data-ta="கடன் (Account)">கடன் (Account)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="invoice-items-container">
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Item" data-ta="பொருள்">பொருள்</th>
+                                    <th data-en="Qty" data-ta="அளவு">அளவு</th>
+                                    <th data-en="Total" data-ta="மொத்தம்">மொத்தம்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoice-items">
+                                <!-- Cart items dynamically populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="invoice-footer">
+                        <div class="totals-area">
+                            <div class="tot-row">
+                                <span data-en="Subtotal" data-ta="உப மொத்தம்">உப மொத்தம்</span>
+                                <b id="cart-subtotal">₹0.00</b>
+                            </div>
+                            <div class="tot-row">
+                                <span data-en="Discount (₹)" data-ta="தள்ளுபடி (₹)">தள்ளுபடி (₹)</span>
+                                <input type="number" id="cart-discount" min="0" step="1" value="0"
+                                    oninput="calculateTotals()"
+                                    style="width: 75px; text-align: right; padding: 2px 6px; font-weight: 700; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px;">
+                            </div>
+                            <div class="tot-row">
+                                <span data-en="Tax (0%)" data-ta="வரி (0%)">வரி (0%)</span>
+                                <b id="cart-tax">₹0.00</b>
+                            </div>
+                            <div class="tot-row grand-total">
+                                <span data-en="Grand Total" data-ta="மொத்தம்">மொத்தம்</span>
+                                <b id="cart-total">₹0.00</b>
+                            </div>
+                            <div id="account-due-info" class="tot-row account-bal-row" style="display: none;">
+                                <span data-en="Account Balance Remaining:" data-ta="கணக்கு மீதி பாக்கி:">கணக்கு மீதி
+                                    பாக்கி:</span>
+                                <b id="cart-account-remaining" class="text-danger">₹0.00</b>
+                            </div>
+                        </div>
+
+                        <!-- Quick Cash Buttons -->
+                        <div class="quick-cash-grid">
+                            <button class="cash-btn" onclick="addCash(50)">+50</button>
+                            <button class="cash-btn" onclick="addCash(100)">+100</button>
+                            <button class="cash-btn" onclick="addCash(200)">+200</button>
+                            <button class="cash-btn" onclick="addCash(500)">+500</button>
+                        </div>
+
+                        <div class="change-calc">
+                            <div class="calc-row">
+                                <label data-en="Tendered:" data-ta="பெற்றது:">பெற்றது:</label>
+                                <input type="number" id="cash-tendered" value="0">
+                            </div>
+                            <div class="calc-row highlight-change">
+                                <span data-en="Change:" data-ta="மீதி:">மீதி:</span>
+                                <b id="cash-change">₹0.00</b>
+                            </div>
+                        </div>
+
+                        <button id="checkout-btn" class="btn-primary full-width" data-en="Generate Bill / பில் போடு"
+                            data-ta="பில் போடு / Generate Bill">பில் போடு / Generate Bill</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 2: Stock Management -->
+            <section id="stock-view" class="view-section single-card-layout">
+                <div class="card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Stock Management" data-ta="சரக்கு நிர்வாகம்">சரக்கு நிர்வாகம்</h2>
+                    </div>
+
+                    <div class="tab-menu mb-20">
+                        <button class="tab-btn active" data-tab="tab-stock-status" data-en="Find Stock"
+                            data-ta="சரக்கு நிலை">சரக்கு நிலை</button>
+                        <button class="tab-btn" data-tab="tab-stock-refill" data-en="Refill Stock"
+                            data-ta="சரக்கு நிரப்பு">சரக்கு நிரப்பு</button>
+                        <button class="tab-btn" data-tab="tab-stock-new" data-en="Add New Item"
+                            data-ta="புதிய பொருளை சேர்">புதிய பொருளை சேர்</button>
+                    </div>
+
+                    <div class="tab-content active" id="tab-stock-status">
+                        <div class="card-metric mb-20">
+                            <span data-en="Total Stock Investment:" data-ta="மொத்த சரக்கு முதலீடு:">மொத்த சரக்கு
+                                முதலீடு:</span>
+                            <h3 id="total-investment" class="text-blue">₹0.00</h3>
+                        </div>
+                        <div class="search-box mb-20">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="stock-search" placeholder="Search inventory..."
+                                data-en-placeholder="Search inventory..." data-ta-placeholder="சரக்கில் தேடவும்...">
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Product" data-ta="பொருள்">பொருள்</th>
+                                    <th data-en="Stock" data-ta="இருப்பு">இருப்பு</th>
+                                    <th data-en="Unit" data-ta="அலகு">அலகு</th>
+                                    <th data-en="Value" data-ta="மதிப்பு">மதிப்பு</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-content" id="tab-stock-refill">
+                        <div class="search-box mb-20">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="refill-search" placeholder="Search to refill..."
+                                data-en-placeholder="Search to refill..." data-ta-placeholder="நிரப்ப தேடவும்...">
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Product" data-ta="பொருள்">பொருள்</th>
+                                    <th data-en="Current Stock" data-ta="தற்போதைய இருப்பு">தற்போதைய இருப்பு</th>
+                                    <th data-en="Add Qty" data-ta="கூடுதல் அளவு">கூடுதல் அளவு</th>
+                                    <th data-en="Update Expiry" data-ta="புதிய காலாவதி">புதிய காலாவதி</th>
+                                    <th data-en="Action" data-ta="செயல்">செயல்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="refill-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-content" id="tab-stock-new">
+                        <form id="add-product-form" class="form-grid">
+                            <div class="form-group">
+                                <label data-en="Product Name (English)" data-ta="பொருளின் பெயர் (English)">பொருளின்
+                                    பெயர் (English)</label>
+                                <input type="text" id="new-prod-name-en" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Product Name (Tamil)" data-ta="பொருளின் பெயர் (தமிழ்)">பொருளின் பெயர்
+                                    (தமிழ்)</label>
+                                <input type="text" id="new-prod-name-ta" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Unit Type" data-ta="அலகு வகை">அலகு வகை</label>
+                                <select id="new-prod-unit" required>
+                                    <option value="kg">kg (Loose)</option>
+                                    <option value="g">g (Loose)</option>
+                                    <option value="pcs">pcs (Packaged)</option>
+                                    <option value="pkt">pkt (Packaged)</option>
+                                </select>
+                                <small class="hint" data-en="Determines cart input style (weights vs +/-)"
+                                    data-ta="இது பில் போடும் முறையை தீர்மானிக்கும்">Determines cart input style (weights
+                                    vs +/-)</small>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Cost Price(500kg)" data-ta="அடக்க விலை(500kg)">அடக்க விலை</label>
+                                <input type="number" id="new-prod-cost" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Selling Price(500kg)" data-ta="விற்பனை விலை(500kg)">விற்பனை விலை</label>
+                                <input type="number" id="new-prod-price" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Initial Stock" data-ta="ஆரம்ப இருப்பு">ஆரம்ப இருப்பு</label>
+                                <input type="number" id="new-prod-stock" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Expiry Date" data-ta="காலாவதி தேதி">காலாவதி தேதி</label>
+                                <input type="date" id="new-prod-expiry">
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Product Image (Optional)" data-ta="பொருளின் படம் (விருப்பம்)">Product
+                                    Image (Optional)</label>
+                                <input type="file" id="new-prod-image" accept="image/*">
+                            </div>
+                            <div class="form-group full-width-field mt-4">
+                                <button type="submit" class="btn-primary" data-en="Save Product"
+                                    data-ta="பொருளை சேமி">பொருளை சேமி</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 5: Price Management -->
+            <section id="price-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Price Management" data-ta="விலை நிர்வாகம்">விலை நிர்வாகம்</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Product" data-ta="பொருள்">பொருள்</th>
+                                <th data-en="Cost Price" data-ta="அடக்க விலை">அடக்க விலை</th>
+                                <th data-en="Selling Price" data-ta="விற்பனை விலை">விற்பனை விலை</th>
+                                <th data-en="Action" data-ta="செயல்">செயல்</th>
+                            </tr>
+                        </thead>
+                        <tbody id="price-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VIEW 6: Profit Analysis -->
+            <section id="profit-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Profit Analysis" data-ta="லாப பகுப்பாய்வு">லாப பகுப்பாய்வு</h2>
+                    <div class="metrics-row mb-20 mt-4">
+                        <div class="metric-card">
+                            <span data-en="Total Shop Investment" data-ta="மொத்த கடை முதலீடு">மொத்த கடை முதலீடு</span>
+                            <b id="profit-total-investment" class="text-blue">₹0.00</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Profit for Selected Period"
+                                data-ta="தேர்ந்தெடுக்கப்பட்ட காலத்தின் லாபம்">தேர்ந்தெடுக்கப்பட்ட காலத்தின் லாபம்</span>
+                            <b id="profit-amount" class="text-success">₹0.00</b>
+                        </div>
+                    </div>
+                    <div class="profit-filters">
+                        <button class="btn-filter active" data-range="today" data-en="Today"
+                            data-ta="இன்று">இன்று</button>
+                        <button class="btn-filter" data-range="yesterday" data-en="Yesterday"
+                            data-ta="நேற்று">நேற்று</button>
+                        <button class="btn-filter" data-range="last-month" data-en="Last Month"
+                            data-ta="கடந்த மாதம்">கடந்த மாதம்</button>
+                        <input type="date" id="profit-custom-date" class="date-filter" title="Custom Date">
+                    </div>
+                    <div class="mt-4">
+                        <h3 data-en="Sales Details" data-ta="விற்பனை விவரங்கள்">விற்பனை விவரங்கள்</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Date (DD/MM/YYYY)" data-ta="தேதி (DD/MM/YYYY)">தேதி (DD/MM/YYYY)</th>
+                                    <th data-en="Invoice" data-ta="பில்">பில்</th>
+                                    <th data-en="Revenue" data-ta="வருவாய்">வருவாய்</th>
+                                    <th data-en="Cost" data-ta="அடக்கம்">அடக்கம்</th>
+                                    <th data-en="Profit" data-ta="லாபம்">லாபம்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profit-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 7: Accounts Management -->
+            <section id="accounts-view" class="view-section single-card-layout">
+                <div class="card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Customer Accounts" data-ta="வாடிக்கையாளர் கணக்குகள்">வாடிக்கையாளர் கணக்குகள்</h2>
+                        <button class="btn-primary" onclick="UI.switchView('new-account-view')" data-en="+ New Account"
+                            data-ta="+ புதிய கணக்கு">+ புதிய கணக்கு</button>
+                    </div>
+                    <div class="tab-menu mb-20 mt-4">
+                        <button class="tab-btn active" id="tab-btn-active" onclick="switchAccountTab('active')"
+                            data-en="Active Accounts" data-ta="செயலிலுள்ள கணக்குகள்">Active Accounts</button>
+                        <button class="tab-btn" id="tab-btn-history" onclick="switchAccountTab('history')"
+                            data-en="Settlement History" data-ta="முடிந்த கணக்குகள்">Settlement History</button>
+                    </div>
+                    <div class="search-box mb-20">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                        </svg>
+                        <input type="text" id="account-search" placeholder="Search customer name..."
+                            data-en-placeholder="Search customer name..."
+                            data-ta-placeholder="வாடிக்கையாளர் பெயரை தேடவும்...">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Customer Name" data-ta="வாடிக்கையாளர் பெயர்">வாடிக்கையாளர் பெயர்</th>
+                                <th data-en="Start Date (DD/MM/YYYY)" data-ta="தொடங்கிய தேதி (DD/MM/YYYY)">தொடங்கிய தேதி (DD/MM/YYYY)</th>
+                                <th data-en="Balance" data-ta="பாக்கி">பாக்கி</th>
+                                <th data-en="Action" data-ta="செயல்">செயல்</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VIEW 8: New Account -->
+            <section id="new-account-view" class="view-section single-card-layout">
+                <div class="card add-form-card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Create New Account" data-ta="புதிய கணக்கை உருவாக்கு">புதிய கணக்கை உருவாக்கு</h2>
+                        <button class="btn-clear" onclick="UI.switchView('accounts-view')" data-en="Back"
+                            data-ta="பின்செல்">பின்செல்</button>
+                    </div>
+                    <form id="new-account-form" class="form-grid">
+                        <div class="form-group full-width-field">
+                            <label data-en="Customer Name" data-ta="வாடிக்கையாளர் பெயர்">வாடிக்கையாளர் பெயர்</label>
+                            <input type="text" id="acc-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-en="Account Start Date (DD/MM/YYYY)" data-ta="கணக்கு தொடங்கிய தேதி (DD/MM/YYYY)">கணக்கு தொடங்கிய தேதி (DD/MM/YYYY)</label>
+                            <input type="date" id="acc-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-en="Initial Balance Amount" data-ta="ஆரம்ப பாக்கி தொகை">ஆரம்ப பாக்கி
+                                தொகை</label>
+                            <input type="number" step="0.01" id="acc-balance" value="0">
+                        </div>
+                        <div class="form-group full-width-field">
+                            <label data-en="Add from Recent Invoice (Optional)"
+                                data-ta="சமீபத்திய பில்லிலிருந்து சேர்க்க (விருப்பம்)">சமீபத்திய பில்லிலிருந்து சேர்க்க
+                                (விருப்பம்)</label>
+                            <select id="acc-invoice">
+                                <option value="">-- Select Invoice --</option>
+                            </select>
+                            <small class="hint" data-en="Selected invoice total will be added to balance"
+                                data-ta="தேர்ந்தெடுக்கப்பட்ட பில் தொகை பாக்கியில் சேர்க்கப்படும்">Selected invoice total
+                                will be added to balance</small>
+                        </div>
+                        <div class="form-group full-width-field mt-4">
+                            <button type="submit" class="btn-primary" data-en="Create Account"
+                                data-ta="கணக்கை உருவாக்கு">கணக்கை உருவாக்கு</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- VIEW 9: Account Details -->
+            <section id="account-detail-view" class="view-section single-card-layout">
+                <div class="card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Account Details" data-ta="கணக்கு விவரங்கள்">கணக்கு விவரங்கள்</h2>
+                        <button class="btn-clear" onclick="UI.switchView('accounts-view')" data-en="Back"
+                            data-ta="பின்செல்">பின்செல்</button>
+                    </div>
+                    <div class="metrics-row mb-20">
+                        <div class="metric-card">
+                            <span data-en="Customer Name" data-ta="வாடிக்கையாளர் பெயர்">வாடிக்கையாளர் பெயர்</span>
+                            <b id="det-acc-name">--</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Start Date" data-ta="தொடங்கிய தேதி">தொடங்கிய தேதி</span>
+                            <b id="det-acc-date">--</b>
+                        </div>
+                        <div class="metric-card" style="border-color: var(--danger);">
+                            <span data-en="Pending Balance" data-ta="நிலுவை பாக்கி">நிலுவை பாக்கி</span>
+                            <b id="det-acc-balance" class="text-danger">₹0.00</b>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 data-en="Linked Invoices" data-ta="இணைக்கப்பட்ட பில்கள்">இணைக்கப்பட்ட பில்கள்</h3>
+                        <ul id="det-acc-invoices" class="alerts-list"
+                            style="color: var(--text-main); list-style-type: disc;"></ul>
+                    </div>
+                    <div class="mt-4"
+                        style="text-align: right; border-top: 1px solid var(--secondary); padding-top: 20px;">
+                        <button id="btn-delete-account" class="btn-primary" style="background-color: var(--danger);"
+                            data-en="Delete Account (Paid)" data-ta="கணக்கை நீக்கு (பணம் செலுத்தப்பட்டது)">கணக்கை நீக்கு
+                            (பணம் செலுத்தப்பட்டது)</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 10: Expiry Alerts -->
+            <section id="alerts-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Expiry Alerts" data-ta="காலாவதி எச்சரிக்கைகள்">காலாவதி எச்சரிக்கைகள்</h2>
+                    <div class="mt-4">
+                        <ul id="alerts-list" class="alerts-list" style="font-size: 16px;"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 11: Invoices -->
+            <section id="invoices-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Invoices" data-ta="பில்கள்">பில்கள்</h2>
+                    <div class="profit-filters mb-20 mt-4">
+                        <button class="btn-filter-inv active" data-range="today" data-en="Today"
+                            data-ta="இன்று">இன்று</button>
+                        <button class="btn-filter-inv" data-range="yesterday" data-en="Yesterday"
+                            data-ta="நேற்று">நேற்று</button>
+                        <button class="btn-filter-inv" data-range="last-month" data-en="Last Month"
+                            data-ta="கடந்த மாதம்">கடந்த மாதம்</button>
+                        <input type="date" id="invoices-custom-date" class="date-filter" title="Custom Date">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Date (DD/MM/YYYY)" data-ta="தேதி (DD/MM/YYYY)">தேதி (DD/MM/YYYY)</th>
+                                <th data-en="Invoice No." data-ta="பில் எண்">பில் எண்</th>
+                                <th data-en="Total Items" data-ta="பொருட்கள்">பொருட்கள்</th>
+                                <th data-en="Total Amount" data-ta="மொத்த தொகை">மொத்த தொகை</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>

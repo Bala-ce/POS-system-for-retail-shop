@@ -1,0 +1,3761 @@
+<!DOCTYPE html>
+<html lang="ta">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <title>Modern POS System</title>
+    <style>
+/* Modern POS System UI */
+/* Light Blue/White Palette, Grid Layout, Flexbox */
+
+:root {
+    /* Color Palette */
+    --bg-color: #f1f5f9;       /* Crisp Light Blue-Grey */
+    --card-bg: #ffffff;        /* Pure White */
+    --sidebar-bg: #ffffff;
+    --primary: #2563eb;        /* Soft POS Blue */
+    --primary-hover: #1d4ed8;
+    --secondary: #e2e8f0;      /* Borders / Lines */
+    --text-main: #1e293b;      /* Dark Charcoal */
+    --text-muted: #64748b;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --success: #10b981;
+    --warning: #f59e0b;
+
+    /* Typography */
+    --base-font: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-size: var(--base-font);
+    overflow: hidden; /* Stop whole page scrolling, use panel scrolling */
+}
+
+/* App Layout */
+#app {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 90px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.03);
+    z-index: 100;
+}
+
+.sidebar-logo {
+    margin-bottom: 30px;
+}
+
+.sidebar-logo svg {
+    width: 40px;
+    height: 40px;
+    fill: var(--primary);
+}
+
+.nav-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    padding: 10px 0;
+    position: relative;
+}
+
+.nav-btn svg {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
+    transition: transform 0.2s ease;
+}
+
+.nav-btn span {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.nav-btn:hover {
+    color: var(--primary);
+}
+
+.nav-btn:hover svg {
+    transform: scale(1.1);
+}
+
+.nav-btn.active {
+    color: var(--primary);
+}
+
+.nav-btn.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 4px;
+    background-color: var(--primary);
+    border-radius: 0 4px 4px 0;
+}
+
+.sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    width: 100%;
+}
+
+.bell-container {
+    cursor: pointer;
+    position: relative;
+}
+
+.bell-icon {
+    width: 32px;
+    height: 32px;
+    fill: var(--text-muted);
+    transition: fill 0.3s ease;
+}
+
+.bell-icon.alerting {
+    fill: var(--warning);
+    animation: ringBell 1s infinite;
+}
+
+@keyframes ringBell {
+    0% { transform: rotate(0); }
+    10% { transform: rotate(15deg); }
+    20% { transform: rotate(-15deg); }
+    30% { transform: rotate(10deg); }
+    40% { transform: rotate(-10deg); }
+    50% { transform: rotate(0); }
+    100% { transform: rotate(0); }
+}
+
+.btn-lang {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: bold;
+}
+.btn-lang svg { width: 24px; height: 24px; fill: currentColor; margin-bottom: 2px;}
+
+/* Main Content Workspace */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-color);
+    position: relative;
+    overflow-y: auto;
+}
+
+.view-section {
+    display: none;
+    height: 100%;
+    width: 100%;
+}
+
+.view-section.active {
+    display: flex;
+}
+
+/* Single Card Layouts (Stock, Add Product, etc) */
+.single-card-layout {
+    padding: 30px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 30px;
+    width: 100%;
+    max-width: 1000px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+
+.add-form-card {
+    max-width: 600px;
+}
+
+/* POS Layout (2 Columns) */
+.pos-layout {
+    flex-direction: row;
+}
+
+.catalog-panel {
+    flex: 0.68;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+    border-right: 1px solid var(--secondary);
+}
+
+.invoice-panel {
+    flex: 0.32;
+    background-color: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: -2px 0 15px rgba(0,0,0,0.03);
+}
+
+/* Metrics Row */
+.metrics-row {
+    display: flex;
+    gap: 15px;
+}
+
+.metric-card {
+    flex: 1;
+    background-color: var(--card-bg);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    border: 1px solid var(--secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.metric-card span {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.metric-card b {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+/* Catalog Search */
+.catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.catalog-header h2 {
+    font-size: 20px;
+}
+
+.search-box {
+    position: relative;
+    width: 350px;
+}
+
+.search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    fill: var(--text-muted);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    font-size: 16px;
+    border: 1px solid var(--secondary);
+    border-radius: 8px;
+    background-color: var(--card-bg);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Catalog Grid */
+.catalog-grid {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    align-content: start;
+    padding-bottom: 20px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px;}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.product-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--secondary);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+    border-color: var(--primary);
+}
+
+.prod-title {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+.prod-price {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.prod-stock {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.btn-add {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: auto;
+    transition: background 0.2s;
+}
+
+.btn-add:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Invoice Panel */
+.invoice-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inv-details h3 {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.inv-details span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.btn-clear {
+    background: none;
+    border: 1px solid var(--secondary);
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-clear svg { width: 20px; height: 20px; fill: currentColor; }
+.btn-clear:hover { background-color: #fee2e2; border-color: var(--danger); }
+
+.invoice-items-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 20px;
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-table th {
+    text-align: left;
+    padding: 10px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--secondary);
+}
+
+.invoice-table td {
+    padding: 15px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.inv-item-name {
+    font-weight: 600;
+    font-size: 14px;
+    display: block;
+}
+
+.inv-item-price {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Dual Quantity Controls */
+.qty-control-loose {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.qty-control-loose input {
+    width: 60px;
+    padding: 6px;
+    border: 1px solid var(--secondary);
+    border-radius: 4px;
+    text-align: center;
+}
+.qty-control-loose select {
+    padding: 6px;
+    border: 1px solid var(--secondary);
+    border-radius: 4px;
+    background: white;
+}
+
+.qty-control-discrete {
+    display: flex;
+    align-items: center;
+}
+.qty-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--secondary);
+    background: var(--bg-color);
+    font-weight: bold;
+    cursor: pointer;
+}
+.qty-btn:hover { background: var(--secondary); }
+.qty-btn.minus { border-radius: 4px 0 0 4px; }
+.qty-btn.plus { border-radius: 0 4px 4px 0; }
+.qty-input {
+    width: 40px;
+    height: 28px;
+    border: 1px solid var(--secondary);
+    border-left: none;
+    border-right: none;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* Invoice Footer */
+.invoice-footer {
+    padding: 20px;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--secondary);
+}
+
+.totals-area {
+    margin-bottom: 15px;
+}
+
+.tot-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.tot-row.grand-total {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--secondary);
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--text-main);
+}
+.tot-row.grand-total b { color: var(--primary); }
+
+.quick-cash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.cash-btn {
+    padding: 8px 0;
+    border: 1px solid var(--secondary);
+    background-color: white;
+    border-radius: 6px;
+    font-weight: bold;
+    color: var(--primary);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.cash-btn:hover { background-color: var(--bg-color); }
+
+.change-calc {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.calc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.calc-row input {
+    width: 100px;
+    padding: 6px;
+    text-align: right;
+    border: 1px solid var(--secondary);
+    border-radius: 4px;
+}
+
+.highlight-change {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--success);
+}
+.highlight-change b { color: var(--success); }
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-primary:hover { background-color: var(--primary-hover); }
+
+.full-width { width: 100%; font-size: 20px; padding: 15px;}
+
+/* Data Tables inside Cards */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--secondary);
+}
+.data-table th { color: var(--text-muted); font-size: 14px;}
+.data-table td input {
+    padding: 6px;
+    border: 1px solid var(--secondary);
+    border-radius: 4px;
+    width: 120px;
+}
+
+.text-blue { color: var(--primary); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.mb-20 { margin-bottom: 20px; }
+.mt-4 { margin-top: 20px; }
+
+/* Profit Analysis Filters */
+.profit-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--secondary);
+}
+
+.btn-filter {
+    padding: 8px 16px;
+    border: 1px solid var(--secondary);
+    border-radius: 6px;
+    background-color: var(--card-bg);
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+
+.btn-filter:hover {
+    background-color: var(--bg-color);
+}
+
+.btn-filter.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.date-filter {
+    padding: 8px;
+    border: 1px solid var(--secondary);
+    border-radius: 6px;
+    color: var(--text-muted);
+    outline: none;
+}
+
+/* Tab Menu */
+.tab-menu {
+    display: flex;
+    gap: 10px;
+    border-bottom: 2px solid var(--secondary);
+    padding-bottom: 5px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -7px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--primary);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Form Grid */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.form-group { display: flex; flex-direction: column; gap: 8px;}
+.form-group label { font-size: 14px; font-weight: 600;}
+.form-group input, .form-group select {
+    padding: 10px;
+    border: 1px solid var(--secondary);
+    border-radius: 6px;
+    font-size: 15px;
+}
+.full-width-field { grid-column: 1 / -1;}
+.hint { font-size: 12px; color: var(--text-muted); }
+
+/* Modal */
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+.modal.hidden { display: none; }
+.modal-content {
+    position: relative;
+    max-width: 500px;
+}
+.close-btn {
+    position: absolute; top: 15px; right: 15px;
+    background: none; border: none; font-size: 18px; cursor: pointer; color: var(--danger);
+}
+.alerts-list { margin-top: 15px; padding-left: 20px; color: var(--danger); line-height: 1.6;}
+
+/* Customer Bar & Invoice Improvements */
+.billing-customer-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+.billing-customer-bar .billing-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.billing-customer-bar label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.billing-customer-bar select {
+    font-size: 13px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: #ffffff;
+    color: var(--text-color);
+    width: 100%;
+}
+.account-bal-row {
+    background: #eff6ff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px dashed #93c5fd;
+    margin: 6px 0;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* On-Screen Bill Preview Modal */
+.bill-preview-card {
+    width: 95%;
+    max-width: 480px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px !important;
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+}
+.bill-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+.bill-preview-header h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.25rem;
+    color: var(--text-color);
+}
+.modal-close-icon {
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted, #64748b);
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+}
+.modal-close-icon:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+.bill-preview-sub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+}
+.preview-badge {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 11.5px;
+}
+.preview-mode-toggle {
+    display: inline-flex;
+    background: #e2e8f0;
+    border-radius: 6px;
+    padding: 2px;
+}
+.mode-btn {
+    background: none;
+    border: none;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+}
+.mode-btn.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+/* Viewport styled to look like an actual physical counter roll */
+.thermal-roll-viewport {
+    background: #cbd5e1;
+    padding: 20px 14px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    max-height: 58vh;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Physical Paper Roll */
+.thermal-receipt-paper {
+    background: #ffffff;
+    width: 80mm;
+    max-width: 100%;
+    padding: 16px 14px;
+    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    line-height: 1.35;
+    color: #000000;
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+    position: relative;
+    user-select: text;
+}
+.thermal-receipt-paper.paper-58mm {
+    width: 58mm;
+    font-size: 11px;
+    line-height: 1.25;
+    padding: 10px 8px;
+}
+.thermal-paper-tear {
+    height: 8px;
+    background: linear-gradient(135deg, #ffffff 4px, transparent 0), linear-gradient(-135deg, #ffffff 4px, transparent 0);
+    background-size: 8px 8px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+/* Receipt Typography & Layout */
+.receipt-header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+.receipt-header-title {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: #000000;
+}
+.paper-58mm .receipt-header-title {
+    font-size: 12.5px;
+}
+.receipt-header-sub {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #000000;
+    margin-top: 2px;
+}
+.paper-58mm .receipt-header-sub {
+    font-size: 9.5px;
+}
+.receipt-divider {
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #000000;
+    margin: 3px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+}
+.paper-58mm .receipt-divider {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+}
+.receipt-meta {
+    font-size: 11.5px;
+    line-height: 1.35;
+    margin: 3px 0;
+}
+.paper-58mm .receipt-meta {
+    font-size: 10px;
+}
+.receipt-meta-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 1px 0;
+}
+.receipt-meta-label {
+    color: #111111;
+}
+.receipt-meta-val {
+    font-weight: bold;
+    color: #000000;
+}
+.receipt-items-list {
+    margin: 4px 0;
+}
+.receipt-item-row {
+    margin-bottom: 5px;
+}
+.receipt-item-name {
+    font-weight: 700;
+    font-size: 12.5px;
+    line-height: 1.25;
+    color: #000000;
+    word-break: break-word;
+}
+.paper-58mm .receipt-item-name {
+    font-size: 10.5px;
+}
+.receipt-item-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11.5px;
+    color: #000000;
+}
+.paper-58mm .receipt-item-details {
+    font-size: 10px;
+}
+.receipt-item-qty-rate {
+    white-space: nowrap;
+}
+.receipt-item-dots {
+    flex: 1;
+    border-bottom: 1px dotted #000000;
+    margin: 0 4px;
+    height: 8px;
+}
+.receipt-item-total {
+    font-weight: bold;
+    white-space: nowrap;
+    color: #000000;
+}
+.receipt-summary {
+    margin: 3px 0;
+    font-size: 12px;
+}
+.paper-58mm .receipt-summary {
+    font-size: 10.5px;
+}
+.receipt-sum-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 2px 0;
+}
+.receipt-grand-total {
+    font-size: 15.5px;
+    font-weight: 900;
+    display: flex;
+    justify-content: space-between;
+    margin: 3px 0;
+    padding: 2px 0;
+    color: #000000;
+}
+.paper-58mm .receipt-grand-total {
+    font-size: 13.5px;
+}
+.receipt-footer {
+    text-align: center;
+    margin-top: 5px;
+    padding-bottom: 2px;
+}
+.receipt-footer-ta {
+    font-size: 13px;
+    font-weight: bold;
+    color: #000000;
+}
+.paper-58mm .receipt-footer-ta {
+    font-size: 11.5px;
+}
+.receipt-footer-en {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #111111;
+    margin-top: 1px;
+}
+.paper-58mm .receipt-footer-en {
+    font-size: 9px;
+}
+
+/* Modal Actions */
+.bill-preview-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+.btn-print-bill {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    transition: background 0.2s, transform 0.1s;
+}
+.btn-print-bill:hover {
+    background: #1d4ed8 !important;
+    transform: translateY(-1px);
+}
+.btn-print-bill:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+}
+.btn-cancel-bill {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+    transition: background 0.2s, transform 0.1s;
+}
+.btn-cancel-bill:hover {
+    background: #dc2626 !important;
+    transform: translateY(-1px);
+}
+
+/* -------------------------------------------------------------
+   3. THERMAL RECEIPT PRINT STYLING (@media print)
+   Targeted for thermal roll printers (58mm / 80mm)
+   ------------------------------------------------------------- */
+@media print {
+  body * {
+    visibility: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  #bill-preview-modal {
+    display: block !important;
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .bill-preview-card, .thermal-roll-viewport {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #receipt-preview-content, #receipt-preview-content * {
+    visibility: visible;
+  }
+
+  #receipt-preview-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    line-height: 1.3;
+    color: #000000;
+    padding: 4mm;
+    background: #ffffff;
+    box-shadow: none !important;
+    border: none !important;
+    box-sizing: border-box;
+  }
+
+  #receipt-preview-content.paper-58mm {
+    width: 58mm !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    padding: 2mm !important;
+  }
+
+  .thermal-paper-tear, .bill-preview-header, .bill-preview-actions, .close-btn {
+    display: none !important;
+  }
+
+  @page {
+    size: 80mm auto;
+    margin: 0mm;
+  }
+}
+
+.prod-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+.prod-img-placeholder {
+    width: 100%;
+    height: 120px;
+    background-color: var(--secondary);
+    border-radius: 6px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.prod-img-placeholder::after {
+    content: "No Image";
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* Table Product Thumbnails & Cells */
+.table-prod-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.table-prod-thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid var(--secondary);
+    background: #ffffff;
+    flex-shrink: 0;
+}
+.table-prod-thumb-placeholder {
+    width: 42px;
+    height: 42px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* Badges for Payments & Status */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.badge-cash {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+.badge-account {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+.badge-upi {
+    background: #ede9fe;
+    color: #6d28d9;
+    border: 1px solid #ddd6fe;
+}
+.badge-primary {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
+/* Clickable Invoice Table Rows */
+tr.invoice-row-clickable {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+tr.invoice-row-clickable:hover {
+    background-color: #f1f5f9 !important;
+}
+
+/* Secondary & Small Buttons */
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 13px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    transition: all 0.2s;
+}
+.btn-secondary {
+    background-color: #f1f5f9;
+    color: var(--text-main);
+    border: 1px solid #cbd5e1;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-secondary:hover {
+    background-color: #e2e8f0;
+}
+.btn-outline-primary {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+/* Edit Product Modal Specifics */
+.edit-img-preview-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid var(--secondary);
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+.edit-img-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.modal-actions-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--secondary);
+}
+
+/* Invoice Details Modal Specifics */
+.modal-header-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--secondary);
+    padding-bottom: 12px;
+}
+.invoice-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    padding: 14px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid var(--secondary);
+}
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.meta-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.inv-summary-box {
+    padding: 14px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid var(--secondary);
+}
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+.grand-total-line {
+    border-top: 1px dashed var(--secondary);
+    padding-top: 10px;
+    margin-top: 8px;
+    font-weight: 700;
+}
+.alert-box {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.alert-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+
+</style>
+</head>
+
+<body>
+
+    <!-- Main Application Container -->
+    <div id="app">
+        <div id="payment-modal" class="modal hidden">
+            <div class="modal-content card" style="padding: 30px;">
+                <button class="close-btn" onclick="closePaymentModal()">×</button>
+                <h2 data-en="Payment Settlement" data-ta="பணம் செலுத்துதல்">Payment Settlement</h2>
+                <input type="hidden" id="modal-account-id">
+                <div class="form-group mt-4">
+                    <label data-en="Current Balance:" data-ta="தற்போதைய பாக்கி:">Current Balance:</label>
+                    <b id="modal-current-balance" class="text-danger" style="font-size:24px;">₹0.00</b>
+                </div>
+                <div class="form-group mt-4">
+                    <label data-en="Paid Amount:" data-ta="செலுத்தும் தொகை:">Paid Amount:</label>
+                    <input type="number" id="modal-paid-amount" step="0.01" min="0"
+                        style="font-size: 20px; padding: 10px;">
+                </div>
+                <div class="form-group mt-4">
+                    <button class="btn-primary full-width" onclick="submitPayment()" data-en="Submit Payment"
+                        data-ta="சமர்ப்பி">Submit Payment</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- On-Screen Thermal Bill Preview Modal -->
+        <div id="bill-preview-modal" class="modal hidden notranslate" translate="no">
+            <div class="modal-content card bill-preview-card notranslate" translate="no">
+                <div class="bill-preview-header">
+                    <div>
+                        <h2 class="notranslate" translate="no">பில் சரிபார்ப்பு / Bill Preview</h2>
+                        <div class="bill-preview-sub">
+                            <span class="preview-badge" id="preview-paper-badge">80mm Thermal Receipt</span>
+                            <span class="preview-mode-toggle">
+                                <button type="button" class="mode-btn active" id="btn-mode-80mm"
+                                    onclick="switchThermalPaperSize('80mm')">80mm</button>
+                                <button type="button" class="mode-btn" id="btn-mode-58mm"
+                                    onclick="switchThermalPaperSize('58mm')">58mm</button>
+                            </span>
+                        </div>
+                    </div>
+                    <button class="modal-close-icon" onclick="closeBillPreview()" title="Close / Cancel">×</button>
+                </div>
+
+                <!-- Live visual preview box styled like an actual paper roll with gray background and paper margins -->
+                <div class="thermal-roll-viewport">
+                    <div id="receipt-preview-content" class="thermal-receipt-paper paper-80mm notranslate"
+                        translate="no">
+                        <!-- Complete formatted Tamil receipt dynamically rendered here -->
+                    </div>
+                </div>
+
+                <!-- Modal Action Buttons -->
+                <div class="bill-preview-actions">
+                    <button id="modal-cancel-btn" class="btn-cancel-bill notranslate" translate="no"
+                        onclick="closeBillPreview()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path
+                                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                        </svg>
+                        <span>திருத்து / Edit Bill (Cancel)</span>
+                    </button>
+                    <button id="modal-print-btn" class="btn-print-bill notranslate" translate="no"
+                        onclick="confirmPrintBill()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path
+                                d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" />
+                        </svg>
+                        <span>பிரிண்ட் செய்யவும் (Print Bill)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Stock Item Modal -->
+        <div id="edit-product-modal" class="modal hidden notranslate">
+            <div class="modal-content card" style="max-width: 500px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 25px;">
+                <button class="close-btn" onclick="closeEditProductModal()">×</button>
+                <h2 data-en="Edit Stock Item" data-ta="சரக்கு பொருளை திருத்துதல்" style="margin-bottom: 16px;">சரக்கு பொருளை திருத்துதல்</h2>
+                <input type="hidden" id="edit-prod-id">
+                <input type="hidden" id="edit-prod-current-image-url">
+
+                <div class="edit-img-section mb-15">
+                    <label class="font-bold mb-6 block" data-en="Item Image:" data-ta="பொருளின் படம்:">பொருளின் படம்:</label>
+                    <div class="edit-img-preview-wrapper">
+                        <img id="edit-prod-img-preview" src="" alt="Product Preview" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--secondary); background: #ffffff; display: none;">
+                        <div id="edit-prod-no-img" class="prod-img-placeholder" style="width: 80px; height: 80px; border-radius: 8px;"></div>
+                        <div class="edit-img-controls">
+                            <input type="file" id="edit-prod-image-file" accept="image/*" onchange="previewEditImage(this)" style="display: none;">
+                            <button type="button" class="btn-sm btn-secondary" onclick="document.getElementById('edit-prod-image-file').click()" data-en="Choose / Change Image" data-ta="படத்தை தேர்ந்தெடுக்க / மாற்ற">படத்தை தேர்ந்தெடுக்க / மாற்ற</button>
+                            <button type="button" class="btn-sm text-danger" id="edit-prod-remove-img" onclick="removeEditProductImage()" style="display: none; background: transparent; border: 1px solid #fca5a5;" data-en="Remove Image" data-ta="படத்தை நீக்கு">படத்தை நீக்கு</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-12">
+                    <label data-en="Product Name (English)" data-ta="பொருளின் பெயர் (English)">பொருளின் பெயர் (English)</label>
+                    <input type="text" id="edit-prod-name-en" required style="width: 100%; padding: 9px; font-size: 15px;">
+                </div>
+
+                <div class="form-group mb-12">
+                    <label data-en="Product Name (Tamil)" data-ta="பொருளின் பெயர் (தமிழ்)">பொருளின் பெயர் (தமிழ்)</label>
+                    <input type="text" id="edit-prod-name-ta" required style="width: 100%; padding: 9px; font-size: 15px;">
+                </div>
+
+                <div class="form-row-2 mb-12">
+                    <div class="form-group">
+                        <label data-en="Cost Price" data-ta="அடக்க விலை">அடக்க விலை</label>
+                        <input type="number" id="edit-prod-cost" step="0.01" style="width: 100%; padding: 9px; font-size: 15px;">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Selling Price" data-ta="விற்பனை விலை">விற்பனை விலை</label>
+                        <input type="number" id="edit-prod-price" step="0.01" style="width: 100%; padding: 9px; font-size: 15px;">
+                    </div>
+                </div>
+
+                <div class="form-group mb-20">
+                    <label data-en="Unit Type" data-ta="அலகு வகை">அலகு வகை</label>
+                    <select id="edit-prod-unit" style="width: 100%; padding: 9px; font-size: 15px;">
+                        <option value="kg">kg (Loose)</option>
+                        <option value="g">g (Loose)</option>
+                        <option value="pcs">pcs (Packaged)</option>
+                        <option value="pkt">pkt (Packaged)</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="btn-secondary" onclick="closeEditProductModal()" data-en="Cancel" data-ta="ரத்து செய்">ரத்து செய்</button>
+                    <button type="button" class="btn-primary" onclick="saveEditProduct()" id="btn-save-edit-prod" data-en="Save Changes" data-ta="சேமிக்கவும்">சேமிக்கவும்</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Invoice Details Modal -->
+        <div id="invoice-details-modal" class="modal hidden notranslate">
+            <div class="modal-content card" style="max-width: 650px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 25px;">
+                <button class="close-btn" onclick="closeInvoiceModal()">×</button>
+                <div class="modal-header-banner mb-15">
+                    <div>
+                        <h2 data-en="Invoice Details" data-ta="பில் விவரங்கள்">பில் விவரங்கள்</h2>
+                        <span id="inv-modal-number" class="badge badge-primary" style="font-size: 15px; margin-top: 4px;">INV-1001</span>
+                    </div>
+                    <span id="inv-modal-payment-badge" class="badge badge-cash">Cash</span>
+                </div>
+
+                <div class="invoice-meta-grid mb-15">
+                    <div class="meta-item">
+                        <span class="meta-label" data-en="Date & Time (DD/MM/YYYY):" data-ta="தேதி & நேரம்:">தேதி & நேரம்:</span>
+                        <b id="inv-modal-date">-</b>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label" data-en="Customer:" data-ta="வாடிக்கையாளர்:">வாடிக்கையாளர்:</span>
+                        <b id="inv-modal-customer">-</b>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label" data-en="Payment Method:" data-ta="பணம் முறை:">பணம் முறை:</span>
+                        <b id="inv-modal-payment">-</b>
+                    </div>
+                </div>
+
+                <div id="inv-modal-account-alert" class="alert-box alert-warning mb-15" style="display: none;">
+                    <span>⚠️</span>
+                    <span id="inv-modal-account-alert-text">கணக்கில் ஏற்றப்பட்டது</span>
+                </div>
+
+                <table class="data-table mb-15">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th data-en="Item" data-ta="பொருள்">பொருள்</th>
+                            <th data-en="Qty" data-ta="அளவு">அளவு</th>
+                            <th data-en="Price" data-ta="விலை">விலை</th>
+                            <th data-en="Total" data-ta="மொத்தம்">மொத்தம்</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inv-modal-items-tbody"></tbody>
+                </table>
+
+                <div class="inv-summary-box mb-20">
+                    <div class="summary-line">
+                        <span data-en="Subtotal:" data-ta="உப மொத்தம்:">உப மொத்தம்:</span>
+                        <b id="inv-modal-subtotal">₹0.00</b>
+                    </div>
+                    <div class="summary-line" id="inv-modal-discount-line" style="display: none;">
+                        <span data-en="Discount:" data-ta="தள்ளுபடி:">தள்ளுபடி:</span>
+                        <b id="inv-modal-discount" class="text-danger">-₹0.00</b>
+                    </div>
+                    <div class="summary-line grand-total-line">
+                        <span data-en="Total Amount:" data-ta="மொத்த தொகை:">மொத்த தொகை:</span>
+                        <b id="inv-modal-total" class="text-blue" style="font-size: 20px;">₹0.00</b>
+                    </div>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="btn-secondary" onclick="closeInvoiceModal()" data-en="Close" data-ta="மூடு">மூடு</button>
+                    <button type="button" class="btn-primary" onclick="printInvoiceFromModal()" data-en="Print Receipt" data-ta="பிரிண்ட் செய்யவும்">
+                        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;vertical-align:bottom;margin-right:6px;"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+                        <span data-en="Print Receipt" data-ta="பிரிண்ட் செய்யவும்">பிரிண்ட் செய்யவும்</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-target="billing-view" title="Billing System">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                    <span data-en="Billing" data-ta="பில்லிங்">பில்லிங்</span>
+                </button>
+                <button class="nav-btn" data-target="stock-view" title="Stock Management">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                    </svg>
+                    <span data-en="Stock" data-ta="இருப்பு">இருப்பு</span>
+                </button>
+                <button class="nav-btn" data-target="price-view" title="Price Management">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.41l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.41zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" />
+                    </svg>
+                    <span data-en="Prices" data-ta="விலை">விலை</span>
+                </button>
+                <button class="nav-btn" data-target="alerts-view" title="Expiry Alerts">
+                    <svg viewBox="0 0 24 24" id="expiry-bell">
+                        <path
+                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+                    </svg>
+                    <span data-en="Alerts" data-ta="எச்சரிக்கை">எச்சரிக்கை</span>
+                </button>
+                <button class="nav-btn" data-target="invoices-view" title="Invoices">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                    </svg>
+                    <span data-en="Invoices" data-ta="பில்கள்">பில்கள்</span>
+                </button>
+                <button class="nav-btn" data-target="profit-view" title="Profit Analysis">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+                    </svg>
+                    <span data-en="Profit" data-ta="லாபம்">லாபம்</span>
+                </button>
+                <button class="nav-btn" data-target="accounts-view" title="Accounts">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
+                    <span data-en="Accounts" data-ta="கணக்குகள்">கணக்குகள்</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <button id="lang-toggle" class="btn-lang" data-current="ta" title="Switch Language">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.09 13.36 4 12.69 4 12s.09-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c1.84-.63 3.37-1.91 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.34.16-2h4.68c.09.66.16 1.32.16 2 0 .68-.07 1.34-.16 2zm1.63 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.17.64.26 1.31.26 2s-.09 1.36-.26 2h-3.38z" />
+                    </svg>
+                    <span id="lang-label">EN</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- VIEW 1: BILLING (Default) -->
+            <section id="billing-view" class="view-section active pos-layout">
+
+                <!-- Left Panel (Product Catalog & Search) -->
+                <div class="catalog-panel">
+                    <!-- Top Metrics -->
+                    <div class="metrics-row">
+                        <div class="metric-card">
+                            <span data-en="Today's Sales" data-ta="இன்றைய விற்பனை">இன்றைய விற்பனை</span>
+                            <b id="metric-sales">₹0.00</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Invoices" data-ta="பில்கள்">பில்கள்</span>
+                            <b id="metric-invoices">0</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Collected Amount" data-ta="வசூலான தொகை">வசூலான தொகை</span>
+                            <b id="metric-collected">₹0.00</b>
+                        </div>
+                    </div>
+
+                    <!-- Header & Search Bar -->
+                    <div class="catalog-header">
+                        <h2 id="pos-title">🏪 ராஜா நாட்டு மருந்து & பலசரக் கடை</h2>
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="catalog-search" placeholder="பொருளை தேடவும்... / Search products..."
+                                data-en-placeholder="Search products..." data-ta-placeholder="பொருளை தேடவும்...">
+                        </div>
+                    </div>
+
+                    <!-- Catalog List / Grid -->
+                    <div class="catalog-grid" id="catalog-grid">
+                        <!-- Product cards dynamically populated here -->
+                    </div>
+                </div>
+
+                <!-- Right Panel (Invoice & Checkout Column) -->
+                <div class="invoice-panel">
+                    <div class="invoice-header">
+                        <div class="inv-details">
+                            <h3 id="inv-number">INV-1001</h3>
+                            <span id="inv-date">Oct 24, 2026 - 10:30 AM</span>
+                        </div>
+                        <button id="clear-cart-btn" class="btn-clear" title="Clear Cart">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="billing-customer-bar">
+                        <div class="billing-field">
+                            <label data-en="Customer:" data-ta="வாடிக்கையாளர்:">வாடிக்கையாளர்:</label>
+                            <select id="invoice-customer-select" onchange="onInvoiceCustomerSelect()">
+                                <option value="cash" data-en="Cash Customer" data-ta="ரொக்க வாடிக்கையாளர்">ரொக்க
+                                    வாடிக்கையாளர் (Cash Customer)</option>
+                            </select>
+                        </div>
+                        <div class="billing-field">
+                            <label data-en="Payment:" data-ta="பணம் முறை:">பணம் முறை:</label>
+                            <select id="invoice-payment-method" onchange="onInvoicePaymentMethodChange()">
+                                <option value="Cash" data-en="Cash" data-ta="ரொக்கம் (Cash)">ரொக்கம் (Cash)</option>
+                                <option value="Account" data-en="Account / UPI" data-ta="கடன் (Account)">கடன் (Account)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="invoice-items-container">
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Item" data-ta="பொருள்">பொருள்</th>
+                                    <th data-en="Qty" data-ta="அளவு">அளவு</th>
+                                    <th data-en="Total" data-ta="மொத்தம்">மொத்தம்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoice-items">
+                                <!-- Cart items dynamically populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="invoice-footer">
+                        <div class="totals-area">
+                            <div class="tot-row">
+                                <span data-en="Subtotal" data-ta="உப மொத்தம்">உப மொத்தம்</span>
+                                <b id="cart-subtotal">₹0.00</b>
+                            </div>
+                            <div class="tot-row">
+                                <span data-en="Discount (₹)" data-ta="தள்ளுபடி (₹)">தள்ளுபடி (₹)</span>
+                                <input type="number" id="cart-discount" min="0" step="1" value="0"
+                                    oninput="calculateTotals()"
+                                    style="width: 75px; text-align: right; padding: 2px 6px; font-weight: 700; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px;">
+                            </div>
+                            <div class="tot-row">
+                                <span data-en="Tax (0%)" data-ta="வரி (0%)">வரி (0%)</span>
+                                <b id="cart-tax">₹0.00</b>
+                            </div>
+                            <div class="tot-row grand-total">
+                                <span data-en="Grand Total" data-ta="மொத்தம்">மொத்தம்</span>
+                                <b id="cart-total">₹0.00</b>
+                            </div>
+                            <div id="account-due-info" class="tot-row account-bal-row" style="display: none;">
+                                <span data-en="Account Balance Remaining:" data-ta="கணக்கு மீதி பாக்கி:">கணக்கு மீதி
+                                    பாக்கி:</span>
+                                <b id="cart-account-remaining" class="text-danger">₹0.00</b>
+                            </div>
+                        </div>
+
+                        <!-- Quick Cash Buttons -->
+                        <div class="quick-cash-grid">
+                            <button class="cash-btn" onclick="addCash(50)">+50</button>
+                            <button class="cash-btn" onclick="addCash(100)">+100</button>
+                            <button class="cash-btn" onclick="addCash(200)">+200</button>
+                            <button class="cash-btn" onclick="addCash(500)">+500</button>
+                        </div>
+
+                        <div class="change-calc">
+                            <div class="calc-row">
+                                <label data-en="Tendered:" data-ta="பெற்றது:">பெற்றது:</label>
+                                <input type="number" id="cash-tendered" value="0">
+                            </div>
+                            <div class="calc-row highlight-change">
+                                <span data-en="Change:" data-ta="மீதி:">மீதி:</span>
+                                <b id="cash-change">₹0.00</b>
+                            </div>
+                        </div>
+
+                        <button id="checkout-btn" class="btn-primary full-width" data-en="Generate Bill / பில் போடு"
+                            data-ta="பில் போடு / Generate Bill">பில் போடு / Generate Bill</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 2: Stock Management -->
+            <section id="stock-view" class="view-section single-card-layout">
+                <div class="card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Stock Management" data-ta="சரக்கு நிர்வாகம்">சரக்கு நிர்வாகம்</h2>
+                    </div>
+
+                    <div class="tab-menu mb-20">
+                        <button class="tab-btn active" data-tab="tab-stock-status" data-en="Find Stock"
+                            data-ta="சரக்கு நிலை">சரக்கு நிலை</button>
+                        <button class="tab-btn" data-tab="tab-stock-refill" data-en="Refill Stock"
+                            data-ta="சரக்கு நிரப்பு">சரக்கு நிரப்பு</button>
+                        <button class="tab-btn" data-tab="tab-stock-new" data-en="Add New Item"
+                            data-ta="புதிய பொருளை சேர்">புதிய பொருளை சேர்</button>
+                    </div>
+
+                    <div class="tab-content active" id="tab-stock-status">
+                        <div class="card-metric mb-20">
+                            <span data-en="Total Stock Investment:" data-ta="மொத்த சரக்கு முதலீடு:">மொத்த சரக்கு
+                                முதலீடு:</span>
+                            <h3 id="total-investment" class="text-blue">₹0.00</h3>
+                        </div>
+                        <div class="search-box mb-20">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="stock-search" placeholder="Search inventory..."
+                                data-en-placeholder="Search inventory..." data-ta-placeholder="சரக்கில் தேடவும்...">
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Product" data-ta="பொருள்">பொருள்</th>
+                                    <th data-en="Stock" data-ta="இருப்பு">இருப்பு</th>
+                                    <th data-en="Unit" data-ta="அலகு">அலகு</th>
+                                    <th data-en="Value" data-ta="மதிப்பு">மதிப்பு</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-content" id="tab-stock-refill">
+                        <div class="search-box mb-20">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="refill-search" placeholder="Search to refill..."
+                                data-en-placeholder="Search to refill..." data-ta-placeholder="நிரப்ப தேடவும்...">
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Product" data-ta="பொருள்">பொருள்</th>
+                                    <th data-en="Current Stock" data-ta="தற்போதைய இருப்பு">தற்போதைய இருப்பு</th>
+                                    <th data-en="Add Qty" data-ta="கூடுதல் அளவு">கூடுதல் அளவு</th>
+                                    <th data-en="Update Expiry" data-ta="புதிய காலாவதி">புதிய காலாவதி</th>
+                                    <th data-en="Action" data-ta="செயல்">செயல்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="refill-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-content" id="tab-stock-new">
+                        <form id="add-product-form" class="form-grid">
+                            <div class="form-group">
+                                <label data-en="Product Name (English)" data-ta="பொருளின் பெயர் (English)">பொருளின்
+                                    பெயர் (English)</label>
+                                <input type="text" id="new-prod-name-en" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Product Name (Tamil)" data-ta="பொருளின் பெயர் (தமிழ்)">பொருளின் பெயர்
+                                    (தமிழ்)</label>
+                                <input type="text" id="new-prod-name-ta" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Unit Type" data-ta="அலகு வகை">அலகு வகை</label>
+                                <select id="new-prod-unit" required>
+                                    <option value="kg">kg (Loose)</option>
+                                    <option value="g">g (Loose)</option>
+                                    <option value="pcs">pcs (Packaged)</option>
+                                    <option value="pkt">pkt (Packaged)</option>
+                                </select>
+                                <small class="hint" data-en="Determines cart input style (weights vs +/-)"
+                                    data-ta="இது பில் போடும் முறையை தீர்மானிக்கும்">Determines cart input style (weights
+                                    vs +/-)</small>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Cost Price(500kg)" data-ta="அடக்க விலை(500kg)">அடக்க விலை</label>
+                                <input type="number" id="new-prod-cost" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Selling Price(500kg)" data-ta="விற்பனை விலை(500kg)">விற்பனை விலை</label>
+                                <input type="number" id="new-prod-price" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Initial Stock" data-ta="ஆரம்ப இருப்பு">ஆரம்ப இருப்பு</label>
+                                <input type="number" id="new-prod-stock" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Expiry Date" data-ta="காலாவதி தேதி">காலாவதி தேதி</label>
+                                <input type="date" id="new-prod-expiry">
+                            </div>
+                            <div class="form-group">
+                                <label data-en="Product Image (Optional)" data-ta="பொருளின் படம் (விருப்பம்)">Product
+                                    Image (Optional)</label>
+                                <input type="file" id="new-prod-image" accept="image/*">
+                            </div>
+                            <div class="form-group full-width-field mt-4">
+                                <button type="submit" class="btn-primary" data-en="Save Product"
+                                    data-ta="பொருளை சேமி">பொருளை சேமி</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 5: Price Management -->
+            <section id="price-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Price Management" data-ta="விலை நிர்வாகம்">விலை நிர்வாகம்</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Product" data-ta="பொருள்">பொருள்</th>
+                                <th data-en="Cost Price" data-ta="அடக்க விலை">அடக்க விலை</th>
+                                <th data-en="Selling Price" data-ta="விற்பனை விலை">விற்பனை விலை</th>
+                                <th data-en="Action" data-ta="செயல்">செயல்</th>
+                            </tr>
+                        </thead>
+                        <tbody id="price-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VIEW 6: Profit Analysis -->
+            <section id="profit-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Profit Analysis" data-ta="லாப பகுப்பாய்வு">லாப பகுப்பாய்வு</h2>
+                    <div class="metrics-row mb-20 mt-4">
+                        <div class="metric-card">
+                            <span data-en="Total Shop Investment" data-ta="மொத்த கடை முதலீடு">மொத்த கடை முதலீடு</span>
+                            <b id="profit-total-investment" class="text-blue">₹0.00</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Profit for Selected Period"
+                                data-ta="தேர்ந்தெடுக்கப்பட்ட காலத்தின் லாபம்">தேர்ந்தெடுக்கப்பட்ட காலத்தின் லாபம்</span>
+                            <b id="profit-amount" class="text-success">₹0.00</b>
+                        </div>
+                    </div>
+                    <div class="profit-filters">
+                        <button class="btn-filter active" data-range="today" data-en="Today"
+                            data-ta="இன்று">இன்று</button>
+                        <button class="btn-filter" data-range="yesterday" data-en="Yesterday"
+                            data-ta="நேற்று">நேற்று</button>
+                        <button class="btn-filter" data-range="last-month" data-en="Last Month"
+                            data-ta="கடந்த மாதம்">கடந்த மாதம்</button>
+                        <input type="date" id="profit-custom-date" class="date-filter" title="Custom Date">
+                    </div>
+                    <div class="mt-4">
+                        <h3 data-en="Sales Details" data-ta="விற்பனை விவரங்கள்">விற்பனை விவரங்கள்</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-en="Date" data-ta="தேதி">தேதி</th>
+                                    <th data-en="Invoice" data-ta="பில்">பில்</th>
+                                    <th data-en="Revenue" data-ta="வருவாய்">வருவாய்</th>
+                                    <th data-en="Cost" data-ta="அடக்கம்">அடக்கம்</th>
+                                    <th data-en="Profit" data-ta="லாபம்">லாபம்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profit-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 7: Accounts Management -->
+            <section id="accounts-view" class="view-section single-card-layout">
+                <div class="card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Customer Accounts" data-ta="வாடிக்கையாளர் கணக்குகள்">வாடிக்கையாளர் கணக்குகள்</h2>
+                        <button class="btn-primary" onclick="UI.switchView('new-account-view')" data-en="+ New Account"
+                            data-ta="+ புதிய கணக்கு">+ புதிய கணக்கு</button>
+                    </div>
+                    <div class="tab-menu mb-20 mt-4">
+                        <button class="tab-btn active" id="tab-btn-active" onclick="switchAccountTab('active')"
+                            data-en="Active Accounts" data-ta="செயலிலுள்ள கணக்குகள்">Active Accounts</button>
+                        <button class="tab-btn" id="tab-btn-history" onclick="switchAccountTab('history')"
+                            data-en="Settlement History" data-ta="முடிந்த கணக்குகள்">Settlement History</button>
+                    </div>
+                    <div class="search-box mb-20">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                        </svg>
+                        <input type="text" id="account-search" placeholder="Search customer name..."
+                            data-en-placeholder="Search customer name..."
+                            data-ta-placeholder="வாடிக்கையாளர் பெயரை தேடவும்...">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Customer Name" data-ta="வாடிக்கையாளர் பெயர்">வாடிக்கையாளர் பெயர்</th>
+                                <th data-en="Start Date" data-ta="தொடங்கிய தேதி">தொடங்கிய தேதி</th>
+                                <th data-en="Balance" data-ta="பாக்கி">பாக்கி</th>
+                                <th data-en="Action" data-ta="செயல்">செயல்</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VIEW 8: New Account -->
+            <section id="new-account-view" class="view-section single-card-layout">
+                <div class="card add-form-card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Create New Account" data-ta="புதிய கணக்கை உருவாக்கு">புதிய கணக்கை உருவாக்கு</h2>
+                        <button class="btn-clear" onclick="UI.switchView('accounts-view')" data-en="Back"
+                            data-ta="பின்செல்">பின்செல்</button>
+                    </div>
+                    <form id="new-account-form" class="form-grid">
+                        <div class="form-group full-width-field">
+                            <label data-en="Customer Name" data-ta="வாடிக்கையாளர் பெயர்">வாடிக்கையாளர் பெயர்</label>
+                            <input type="text" id="acc-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-en="Account Start Date" data-ta="கணக்கு தொடங்கிய தேதி">கணக்கு தொடங்கிய
+                                தேதி</label>
+                            <input type="date" id="acc-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-en="Initial Balance Amount" data-ta="ஆரம்ப பாக்கி தொகை">ஆரம்ப பாக்கி
+                                தொகை</label>
+                            <input type="number" step="0.01" id="acc-balance" value="0">
+                        </div>
+                        <div class="form-group full-width-field">
+                            <label data-en="Add from Recent Invoice (Optional)"
+                                data-ta="சமீபத்திய பில்லிலிருந்து சேர்க்க (விருப்பம்)">சமீபத்திய பில்லிலிருந்து சேர்க்க
+                                (விருப்பம்)</label>
+                            <select id="acc-invoice">
+                                <option value="">-- Select Invoice --</option>
+                            </select>
+                            <small class="hint" data-en="Selected invoice total will be added to balance"
+                                data-ta="தேர்ந்தெடுக்கப்பட்ட பில் தொகை பாக்கியில் சேர்க்கப்படும்">Selected invoice total
+                                will be added to balance</small>
+                        </div>
+                        <div class="form-group full-width-field mt-4">
+                            <button type="submit" class="btn-primary" data-en="Create Account"
+                                data-ta="கணக்கை உருவாக்கு">கணக்கை உருவாக்கு</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- VIEW 9: Account Details -->
+            <section id="account-detail-view" class="view-section single-card-layout">
+                <div class="card">
+                    <div class="catalog-header mb-20">
+                        <h2 data-en="Account Details" data-ta="கணக்கு விவரங்கள்">கணக்கு விவரங்கள்</h2>
+                        <button class="btn-clear" onclick="UI.switchView('accounts-view')" data-en="Back"
+                            data-ta="பின்செல்">பின்செல்</button>
+                    </div>
+                    <div class="metrics-row mb-20">
+                        <div class="metric-card">
+                            <span data-en="Customer Name" data-ta="வாடிக்கையாளர் பெயர்">வாடிக்கையாளர் பெயர்</span>
+                            <b id="det-acc-name">--</b>
+                        </div>
+                        <div class="metric-card">
+                            <span data-en="Start Date" data-ta="தொடங்கிய தேதி">தொடங்கிய தேதி</span>
+                            <b id="det-acc-date">--</b>
+                        </div>
+                        <div class="metric-card" style="border-color: var(--danger);">
+                            <span data-en="Pending Balance" data-ta="நிலுவை பாக்கி">நிலுவை பாக்கி</span>
+                            <b id="det-acc-balance" class="text-danger">₹0.00</b>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 data-en="Linked Invoices" data-ta="இணைக்கப்பட்ட பில்கள்">இணைக்கப்பட்ட பில்கள்</h3>
+                        <ul id="det-acc-invoices" class="alerts-list"
+                            style="color: var(--text-main); list-style-type: disc;"></ul>
+                    </div>
+                    <div class="mt-4"
+                        style="text-align: right; border-top: 1px solid var(--secondary); padding-top: 20px;">
+                        <button id="btn-delete-account" class="btn-primary" style="background-color: var(--danger);"
+                            data-en="Delete Account (Paid)" data-ta="கணக்கை நீக்கு (பணம் செலுத்தப்பட்டது)">கணக்கை நீக்கு
+                            (பணம் செலுத்தப்பட்டது)</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 10: Expiry Alerts -->
+            <section id="alerts-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Expiry Alerts" data-ta="காலாவதி எச்சரிக்கைகள்">காலாவதி எச்சரிக்கைகள்</h2>
+                    <div class="mt-4">
+                        <ul id="alerts-list" class="alerts-list" style="font-size: 16px;"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 11: Invoices -->
+            <section id="invoices-view" class="view-section single-card-layout">
+                <div class="card">
+                    <h2 data-en="Invoices" data-ta="பில்கள்">பில்கள்</h2>
+                    <div class="profit-filters mb-20 mt-4">
+                        <button class="btn-filter-inv active" data-range="today" data-en="Today"
+                            data-ta="இன்று">இன்று</button>
+                        <button class="btn-filter-inv" data-range="yesterday" data-en="Yesterday"
+                            data-ta="நேற்று">நேற்று</button>
+                        <button class="btn-filter-inv" data-range="last-month" data-en="Last Month"
+                            data-ta="கடந்த மாதம்">கடந்த மாதம்</button>
+                        <input type="date" id="invoices-custom-date" class="date-filter" title="Custom Date">
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Date" data-ta="தேதி">தேதி</th>
+                                <th data-en="Invoice No." data-ta="பில் எண்">பில் எண்</th>
+                                <th data-en="Total Items" data-ta="பொருட்கள்">பொருட்கள்</th>
+                                <th data-en="Total Amount" data-ta="மொத்த தொகை">மொத்த தொகை</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    
+<script>
+// App State
+let currentLang = 'ta';
+let cart = [];
+let todayInvoices = 0;
+let todaySales = 0;
+let todayCollected = 0;
+
+let currentProducts = [];
+let currentAccountsTab = 'active';
+let currentThermalPaperSize = '80mm';
+let allActiveAccounts = [];
+let allSalesCache = [];
+let currentModalInvoice = null;
+
+// Date formatter in DD/MM/YYYY
+function formatToDDMMYYYY(dateInput, includeTime = true) {
+    if (!dateInput) return '-';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return dateInput;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    if (!includeTime) return `${dd}/${mm}/${yyyy}`;
+
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const hh = String(hours).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy}, ${hh}:${minutes} ${ampm}`;
+}
+
+const API = {
+    async get(endpoint) {
+        const res = await fetch('/api' + endpoint);
+        return res.json();
+    },
+    async post(endpoint, data) {
+        const res = await fetch('/api' + endpoint, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        return res.json();
+    },
+    async put(endpoint, data) {
+        const res = await fetch('/api' + endpoint, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        return res.json();
+    }
+};
+
+// UI Utilities
+const UI = {
+    updateTranslations() {
+        document.querySelectorAll('[data-en]').forEach(el => {
+            el.innerText = el.getAttribute(`data-${currentLang}`);
+        });
+        document.querySelectorAll('[data-en-placeholder]').forEach(el => {
+            el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
+        });
+    },
+
+    toggleLanguage() {
+        currentLang = currentLang === 'ta' ? 'en' : 'ta';
+        document.getElementById('lang-label').innerText = currentLang === 'ta' ? 'EN' : 'தமிழ்';
+        UI.updateTranslations();
+        renderCart();
+        renderCatalog();
+        loadAllViewsData();
+    },
+
+    switchView(targetId, btnElement) {
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        if(btnElement) btnElement.classList.add('active');
+
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+        document.getElementById(targetId).classList.add('active');
+
+        loadAllViewsData();
+    },
+
+    debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    },
+
+    formatCurrency(amount) {
+        return `₹${Number(amount).toFixed(2)}`;
+    },
+    
+    getProductName(item) {
+        return currentLang === 'ta' ? item.name_ta : item.name_en;
+    }
+};
+
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            UI.switchView(btn.getAttribute('data-target'), btn.closest('.nav-btn'));
+        });
+    });
+
+    document.getElementById('lang-toggle').addEventListener('click', UI.toggleLanguage);
+    document.getElementById('catalog-search').addEventListener('input', UI.debounce(renderCatalog, 300));
+    document.getElementById('stock-search').addEventListener('input', UI.debounce(renderStockView, 300));
+    
+    if (document.getElementById('refill-search')) {
+        document.getElementById('refill-search').addEventListener('input', UI.debounce(renderRefillView, 300));
+    }
+
+    document.getElementById('cash-tendered').addEventListener('input', calculateChange);
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if(btn.hasAttribute('data-acc-tab')) return;
+        
+        btn.addEventListener('click', (e) => {
+            const target = e.target.getAttribute('data-tab');
+            document.querySelectorAll('#stock-view .tab-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            document.querySelectorAll('#stock-view .tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(target).classList.add('active');
+        });
+    });
+
+    document.querySelectorAll('.btn-filter-inv').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.btn-filter-inv').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById('invoices-custom-date').value = ''; 
+            renderInvoicesView(e.target.getAttribute('data-range'));
+        });
+    });
+    
+    if(document.getElementById('invoices-custom-date')) {
+        document.getElementById('invoices-custom-date').addEventListener('change', (e) => {
+            document.querySelectorAll('.btn-filter-inv').forEach(b => b.classList.remove('active'));
+            if (e.target.value) {
+                renderInvoicesView('custom', e.target.value);
+            } else {
+                document.querySelector('.btn-filter-inv[data-range="today"]').classList.add('active');
+                renderInvoicesView('today');
+            }
+        });
+    }
+
+    document.getElementById('clear-cart-btn').addEventListener('click', () => {
+        if(confirm(currentLang==='en' ? "Clear cart?" : "பில்லை அழிக்கவா?")) {
+            cart = [];
+            document.getElementById('cash-tendered').value = '0';
+            renderCart();
+        }
+    });
+
+    document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
+    document.getElementById('add-product-form').addEventListener('submit', handleAddProduct);
+
+    document.querySelectorAll('.btn-filter').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById('profit-custom-date').value = ''; 
+            renderProfitView(e.target.getAttribute('data-range'));
+        });
+    });
+    
+    if(document.getElementById('profit-custom-date')) {
+        document.getElementById('profit-custom-date').addEventListener('change', (e) => {
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            if (e.target.value) {
+                renderProfitView('custom', e.target.value);
+            } else {
+                document.querySelector('.btn-filter[data-range="today"]').classList.add('active');
+                renderProfitView('today');
+            }
+        });
+    }
+
+    if(document.getElementById('account-search')) {
+        document.getElementById('account-search').addEventListener('input', UI.debounce(renderAccountsView, 300));
+        document.getElementById('new-account-form').addEventListener('submit', handleNewAccount);
+    }
+
+    setupNewInvoice();
+    UI.updateTranslations();
+    loadAllViewsData();
+});
+
+async function loadAllViewsData() {
+    try {
+        currentProducts = await API.get('/products');
+        renderCatalog();
+        renderStockView();
+        renderRefillView();
+        renderPriceView();
+        checkExpiryAlerts();
+        updateMetrics();
+
+        if (document.getElementById('profit-tbody')) {
+            renderProfitView(document.querySelector('.btn-filter.active') ? document.querySelector('.btn-filter.active').getAttribute('data-range') : 'today');
+        }
+        if (document.getElementById('accounts-tbody')) {
+            renderAccountsView();
+            populateInvoicesDropdown();
+        }
+        if (document.getElementById('invoice-customer-select')) {
+            loadCustomerAccountsForBilling();
+        }
+        if (document.getElementById('invoices-tbody')) {
+            renderInvoicesView(document.querySelector('.btn-filter-inv.active') ? document.querySelector('.btn-filter-inv.active').getAttribute('data-range') : 'today');
+        }
+    } catch(err) {
+        console.error("Error loading data", err);
+    }
+}
+
+function renderCatalog() {
+    const q = document.getElementById('catalog-search').value.trim().toLowerCase();
+    let products = currentProducts;
+
+    if (q) {
+        products = products.filter(p => p.name_en.toLowerCase().includes(q) || p.name_ta.includes(q));
+    }
+
+    const grid = document.getElementById('catalog-grid');
+    grid.innerHTML = '';
+
+    products.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'product-card';
+        div.innerHTML = `
+            ${p.image_url ? `<img src="${p.image_url}" class="prod-img" alt="${p.name_en}">` : `<div class="prod-img-placeholder"></div>`}
+            <div class="prod-title">${UI.getProductName(p)}</div>
+            <div class="prod-price">${UI.formatCurrency(p.selling_price)} <small>/ ${p.unit_type}</small></div>
+            <div class="prod-stock">Stock: ${p.stock_quantity}</div>
+            <button class="btn-add" onclick='addToCart(${JSON.stringify(p)})'>+</button>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+window.addToCart = function(product) {
+    const existing = cart.find(i => i.id === product.id);
+    if (existing) {
+        existing.rawQty += 1;
+    } else {
+        cart.push({ ...product, rawQty: 1, selectedUnit: product.unit_type });
+    }
+    renderCart();
+}
+
+window.updateCartQty = function(id, val, selectedUnit) {
+    const item = cart.find(i => i.id === id);
+    if (item) {
+        item.rawQty = Number(val);
+        if (selectedUnit) item.selectedUnit = selectedUnit;
+        if (item.rawQty <= 0) cart = cart.filter(i => i.id !== id);
+        renderCart();
+    }
+}
+
+window.changeCartQty = function(id, delta) {
+    const item = cart.find(i => i.id === id);
+    if (item) {
+        item.rawQty += delta;
+        if (item.rawQty <= 0) cart = cart.filter(i => i.id !== id);
+        renderCart();
+    }
+}
+
+function renderCart() {
+    const tbody = document.getElementById('invoice-items');
+    tbody.innerHTML = '';
+    let subtotal = 0;
+
+    cart.forEach(item => {
+        let actualQty = item.rawQty;
+        if (item.unit_type === 'kg' && item.selectedUnit === 'g') {
+            actualQty = item.rawQty / 1000;
+        }
+
+        const lineTotal = item.selling_price * actualQty;
+        subtotal += lineTotal;
+
+        let qtyUI = '';
+        if (item.unit_type === 'kg') {
+            qtyUI = `
+                <div class="qty-control-loose">
+                    <input type="number" step="0.05" min="0" value="${item.rawQty}" onchange="updateCartQty(${item.id}, this.value, '${item.selectedUnit}')">
+                    <select onchange="updateCartQty(${item.id}, ${item.rawQty}, this.value)">
+                        <option value="kg" ${item.selectedUnit === 'kg' ? 'selected' : ''}>kg</option>
+                        <option value="g" ${item.selectedUnit === 'g' ? 'selected' : ''}>g</option>
+                    </select>
+                </div>
+            `;
+        } else {
+            qtyUI = `
+                <div class="qty-control-discrete">
+                    <button class="qty-btn minus" onclick="changeCartQty(${item.id}, -1)">-</button>
+                    <input type="text" class="qty-input" value="${item.rawQty}" readonly>
+                    <button class="qty-btn plus" onclick="changeCartQty(${item.id}, 1)">+</button>
+                </div>
+            `;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <span class="inv-item-name">${UI.getProductName(item)}</span>
+                <span class="inv-item-price">@ ${UI.formatCurrency(item.selling_price)}</span>
+            </td>
+            <td>
+                ${qtyUI}
+                <span style="display:none;" class="print-qty">${item.rawQty} ${item.selectedUnit}</span>
+            </td>
+            <td><b>${UI.formatCurrency(lineTotal)}</b></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const discountInput = document.getElementById('cart-discount');
+    const discount = discountInput ? Math.max(0, Number(discountInput.value) || 0) : 0;
+    const grandTotal = Math.max(0, subtotal - discount);
+
+    document.getElementById('cart-subtotal').innerText = UI.formatCurrency(subtotal);
+    document.getElementById('cart-tax').innerText = '₹0.00';
+    document.getElementById('cart-total').innerText = UI.formatCurrency(grandTotal);
+    calculateChange();
+    updateAccountDuePreview();
+}
+
+window.calculateTotals = function() {
+    let subtotal = 0;
+    cart.forEach(item => {
+        let actualQty = item.rawQty;
+        if (item.unit_type === 'kg' && item.selectedUnit === 'g') {
+            actualQty = item.rawQty / 1000;
+        }
+        subtotal += item.selling_price * actualQty;
+    });
+
+    const discountInput = document.getElementById('cart-discount');
+    const discount = discountInput ? Math.max(0, Number(discountInput.value) || 0) : 0;
+    const grandTotal = Math.max(0, subtotal - discount);
+
+    const subtotalEl = document.getElementById('cart-subtotal');
+    const totalEl = document.getElementById('cart-total');
+    if (subtotalEl) subtotalEl.innerText = UI.formatCurrency(subtotal);
+    if (totalEl) totalEl.innerText = UI.formatCurrency(grandTotal);
+
+    calculateChange();
+    updateAccountDuePreview();
+};
+
+window.addCash = function(amt) {
+    const input = document.getElementById('cash-tendered');
+    input.value = Number(input.value) + amt;
+    calculateChange();
+};
+
+function calculateChange() {
+    const totalText = document.getElementById('cart-total').innerText.replace('₹', '');
+    const total = Number(totalText) || 0;
+    const tendered = Number(document.getElementById('cash-tendered').value) || 0;
+    const change = tendered > total ? tendered - total : 0;
+    document.getElementById('cash-change').innerText = UI.formatCurrency(change);
+}
+
+function setupNewInvoice() {
+    const date = new Date();
+    document.getElementById('inv-date').innerText = date.toLocaleString();
+    document.getElementById('inv-number').innerText = `INV-NEW`;
+}
+
+// --- Customer Accounts & Billing Helpers ---
+async function loadCustomerAccountsForBilling() {
+    try {
+        const accounts = await API.get('/accounts');
+        allActiveAccounts = accounts || [];
+        const select = document.getElementById('invoice-customer-select');
+        const payMethodSelect = document.getElementById('invoice-payment-method');
+        if (!select) return;
+
+        const payMethod = payMethodSelect ? payMethodSelect.value : 'Cash';
+        const currentVal = select.value;
+        
+        select.innerHTML = '';
+        if (payMethod === 'Account') {
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.innerText = currentLang === 'en' ? '-- Select Customer Account --' : '-- வாடிக்கையாளர் கணக்கை தேர்வு செய்க --';
+            select.appendChild(defaultOpt);
+        } else {
+            const cashOpt = document.createElement('option');
+            cashOpt.value = 'cash';
+            cashOpt.innerText = currentLang === 'en' ? 'Cash Customer' : 'ரொக்க வாடிக்கையாளர் (Cash Customer)';
+            select.appendChild(cashOpt);
+        }
+
+        allActiveAccounts.forEach(acc => {
+            const opt = document.createElement('option');
+            opt.value = acc.id;
+            opt.innerText = `${acc.customer_name} (${currentLang === 'en' ? 'Due' : 'பாக்கி'}: ₹${Number(acc.balance_amount).toFixed(2)})`;
+            opt.setAttribute('data-name', acc.customer_name);
+            opt.setAttribute('data-balance', acc.balance_amount);
+            select.appendChild(opt);
+        });
+
+        if (currentVal && select.querySelector(`option[value="${currentVal}"]`)) {
+            select.value = currentVal;
+        } else if (payMethod !== 'Account') {
+            select.value = 'cash';
+        }
+        updateAccountDuePreview();
+    } catch(err) {
+        console.error("Error loading accounts for billing", err);
+    }
+}
+
+window.onInvoiceCustomerSelect = function() {
+    updateAccountDuePreview();
+};
+
+window.onInvoicePaymentMethodChange = function() {
+    const payMethodSelect = document.getElementById('invoice-payment-method');
+    const custLabel = document.getElementById('customer-select-label');
+    const changeCalc = document.querySelector('.change-calc');
+    const quickCash = document.querySelector('.quick-cash-grid');
+    const method = payMethodSelect ? payMethodSelect.value : 'Cash';
+
+    if (method === 'Account') {
+        if (custLabel) custLabel.innerText = currentLang === 'en' ? 'Customer Account:' : 'கடன் கணக்கு:';
+        if (changeCalc) changeCalc.style.display = 'none';
+        if (quickCash) quickCash.style.display = 'none';
+    } else if (method === 'UPI') {
+        if (custLabel) custLabel.innerText = currentLang === 'en' ? 'Customer (Optional):' : 'வாடிக்கையாளர்:';
+        if (changeCalc) changeCalc.style.display = 'none';
+        if (quickCash) quickCash.style.display = 'none';
+    } else { // Cash
+        if (custLabel) custLabel.innerText = currentLang === 'en' ? 'Customer:' : 'வாடிக்கையாளர்:';
+        if (changeCalc) changeCalc.style.display = 'block';
+        if (quickCash) quickCash.style.display = 'grid';
+    }
+
+    loadCustomerAccountsForBilling();
+};
+
+function updateAccountDuePreview() {
+    const select = document.getElementById('invoice-customer-select');
+    const payMethodSelect = document.getElementById('invoice-payment-method');
+    const accDueRow = document.getElementById('account-due-info');
+    const accDueRemaining = document.getElementById('cart-account-remaining');
+    
+    if (!select || !payMethodSelect || !accDueRow || !accDueRemaining) return;
+    
+    if (payMethodSelect.value === 'Account') {
+        if (select.value && select.value !== 'cash') {
+            const opt = select.options[select.selectedIndex];
+            const currentBal = Number(opt.getAttribute('data-balance') || 0);
+            const totalText = document.getElementById('cart-total').innerText.replace('₹', '').replace(/,/g, '');
+            const total = Number(totalText) || 0;
+            const newBal = currentBal + total;
+            
+            accDueRemaining.innerHTML = `
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: normal;">முந்தைய பாக்கி: ₹${currentBal.toFixed(2)} + பில்: ₹${total.toFixed(2)} = </span>
+                <b class="text-danger" style="font-size: 15px;">₹${newBal.toFixed(2)}</b>
+            `;
+            accDueRow.style.display = 'flex';
+        } else {
+            accDueRemaining.innerHTML = `<span class="text-danger" style="font-size: 13px; font-weight: bold;">${currentLang === 'en' ? '⚠️ Please select account' : '⚠️ கணக்கை தேர்வு செய்யவும்'}</span>`;
+            accDueRow.style.display = 'flex';
+        }
+    } else {
+        accDueRow.style.display = 'none';
+    }
+}
+
+// --- Paper Size Mode Switcher ---
+window.switchThermalPaperSize = function(size) {
+    currentThermalPaperSize = size;
+    const paper = document.getElementById('receipt-preview-content');
+    const badge = document.getElementById('preview-paper-badge');
+    const btn80 = document.getElementById('btn-mode-80mm');
+    const btn58 = document.getElementById('btn-mode-58mm');
+    
+    if (size === '58mm') {
+        if (paper) {
+            paper.classList.remove('paper-80mm');
+            paper.classList.add('paper-58mm');
+        }
+        if (badge) badge.innerText = '58mm Thermal Receipt';
+        if (btn80) btn80.classList.remove('active');
+        if (btn58) btn58.classList.add('active');
+    } else {
+        if (paper) {
+            paper.classList.remove('paper-58mm');
+            paper.classList.add('paper-80mm');
+        }
+        if (badge) badge.innerText = '80mm Thermal Receipt';
+        if (btn80) btn80.classList.add('active');
+        if (btn58) btn58.classList.remove('active');
+    }
+};
+
+// --- Thermal Receipt Content Generator ---
+function generateReceiptHTML(invoiceNumber) {
+    const date = new Date();
+    const dateStr = date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const dateTimeStr = `${dateStr} ${timeStr}`;
+
+    const custSelect = document.getElementById('invoice-customer-select');
+    let customerName = 'Cash Customer (ரொக்க வாடிக்கையாளர்)';
+    let isAccount = false;
+    let oldBalance = 0;
+
+    if (custSelect && custSelect.value !== 'cash') {
+        const opt = custSelect.options[custSelect.selectedIndex];
+        customerName = opt.getAttribute('data-name') || opt.innerText;
+        isAccount = true;
+        oldBalance = Number(opt.getAttribute('data-balance') || 0);
+    }
+
+    const paySelect = document.getElementById('invoice-payment-method');
+    const paymentMethod = paySelect ? paySelect.value : 'Cash';
+
+    let subtotal = 0;
+    const itemsHtml = cart.map(item => {
+        let actualQty = item.rawQty;
+        if (item.unit_type === 'kg' && item.selectedUnit === 'g') {
+            actualQty = item.rawQty / 1000;
+        }
+        const lineTotal = Number(item.selling_price) * actualQty;
+        subtotal += lineTotal;
+
+        // Line 1: Product Name (English / Tamil)
+        let nameLine = '';
+        if (item.name_ta && item.name_en && item.name_ta !== item.name_en) {
+            nameLine = `${item.name_ta} (${item.name_en})`;
+        } else {
+            nameLine = item.name_ta || item.name_en;
+        }
+
+        // Line 2: Quantity & Rate (e.g., "250g x ₹120.00/kg") ......... Line Total (₹30.00)
+        let qtyRate = '';
+        if (item.unit_type === 'kg') {
+            const unit = item.selectedUnit || 'kg';
+            const rateStr = `₹${Number(item.selling_price).toFixed(2)}/kg`;
+            qtyRate = `${item.rawQty}${unit} x ${rateStr}`;
+        } else {
+            const unit = item.unit_type || 'pcs';
+            const rateStr = `₹${Number(item.selling_price).toFixed(2)}`;
+            qtyRate = `${item.rawQty} ${unit} x ${rateStr}`;
+        }
+
+        return `
+            <div class="receipt-item-row">
+                <div class="receipt-item-name">${nameLine}</div>
+                <div class="receipt-item-details">
+                    <span class="receipt-item-qty-rate">${qtyRate}</span>
+                    <span class="receipt-item-dots"></span>
+                    <span class="receipt-item-total">₹${lineTotal.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const discountInput = document.getElementById('cart-discount');
+    const discount = discountInput ? Math.max(0, Number(discountInput.value) || 0) : 0;
+    const grandTotal = Math.max(0, subtotal - discount);
+
+    const tendered = Number(document.getElementById('cash-tendered')?.value || 0);
+    const change = tendered > grandTotal ? tendered - grandTotal : 0;
+    const remainingBalance = (isAccount && paymentMethod === 'Account') ? (oldBalance + grandTotal) : oldBalance;
+
+    return `
+        <div class="receipt-header notranslate" translate="no">
+            <div class="receipt-header-title notranslate" translate="no">ராஜா நாட்டு மருந்து & பலசரக்கு கடை</div>
+            <div class="receipt-header-sub notranslate" translate="no">(Raja Naatu Marundhu & Palasarakku Kadai)</div>
+        </div>
+
+        <div class="receipt-meta notranslate" translate="no">
+            <div class="receipt-meta-row">
+                <span class="receipt-meta-label">பில் எண் (Bill Serial):</span>
+                <span class="receipt-meta-val receipt-inv-num">${invoiceNumber || 'INV-PREVIEW'}</span>
+            </div>
+            <div class="receipt-meta-row">
+                <span class="receipt-meta-label">தேதி (Date & Time):</span>
+                <span class="receipt-meta-val">${dateTimeStr}</span>
+            </div>
+            <div class="receipt-meta-row">
+                <span class="receipt-meta-label">வாடிக்கையாளர் (Customer):</span>
+                <span class="receipt-meta-val">${customerName}</span>
+            </div>
+        </div>
+
+        <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+
+        <div class="receipt-items-list notranslate" translate="no">
+            ${itemsHtml}
+        </div>
+
+        <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+
+        <div class="receipt-summary notranslate" translate="no">
+            <div class="receipt-sum-row">
+                <span>உப மொத்தம் (Subtotal):</span>
+                <span class="font-bold">₹${subtotal.toFixed(2)}</span>
+            </div>
+            ${discount > 0 ? `
+            <div class="receipt-sum-row">
+                <span>தள்ளுபடி (Discount):</span>
+                <span>-₹${discount.toFixed(2)}</span>
+            </div>` : ''}
+            <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+            <div class="receipt-grand-total notranslate" translate="no">
+                <span>மொத்தம் (Grand Total):</span>
+                <span>₹${grandTotal.toFixed(2)}</span>
+            </div>
+            <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+            <div class="receipt-sum-row">
+                <span>பணம் முறை (Payment Method):</span>
+                <span class="font-bold">${paymentMethod === 'Account' ? 'கடன் (Account)' : paymentMethod === 'UPI' ? 'UPI (ஆன்லைன்)' : 'ரொக்கம் (Cash)'}</span>
+            </div>
+            ${(isAccount && paymentMethod === 'Account') ? `
+            <div class="receipt-sum-row">
+                <span>முந்தைய பாக்கி (Old Bal):</span>
+                <span>₹${oldBalance.toFixed(2)}</span>
+            </div>
+            <div class="receipt-sum-row">
+                <span>தற்போதைய பில் (Current Bill):</span>
+                <span>₹${grandTotal.toFixed(2)}</span>
+            </div>
+            <div class="receipt-sum-row" style="font-weight: bold;">
+                <span>புதிய பாக்கி (New Bal Remaining):</span>
+                <span>₹${remainingBalance.toFixed(2)}</span>
+            </div>
+            ` : (paymentMethod === 'UPI' ? `
+            <div class="receipt-sum-row">
+                <span>செலுத்தியது (Paid via UPI):</span>
+                <span>₹${grandTotal.toFixed(2)}</span>
+            </div>
+            ` : (paymentMethod === 'Cash' && tendered > 0 ? `
+            <div class="receipt-sum-row">
+                <span>பெற்ற ரொக்கம் (Tendered):</span>
+                <span>₹${tendered.toFixed(2)}</span>
+            </div>
+            <div class="receipt-sum-row">
+                <span>மீதி ரொக்கம் (Change Return):</span>
+                <span>₹${change.toFixed(2)}</span>
+            </div>
+            ` : ''))}
+        </div>
+
+        <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+
+        <div class="receipt-footer notranslate" translate="no">
+            <div class="receipt-footer-ta notranslate" translate="no">நன்றி! மீண்டும் வருக!</div>
+            <div class="receipt-footer-en notranslate" translate="no">(Thank You! Visit Again!)</div>
+        </div>
+        <div class="thermal-paper-tear"></div>
+    `;
+}
+
+// --- Preview Modal Controls ---
+window.openBillPreview = async function() {
+    if (cart.length === 0) {
+        alert(currentLang === 'en' ? 'Cart is empty!' : 'கார்ட்டில் எந்த பொருளும் இல்லை!');
+        return;
+    }
+
+    const paySelect = document.getElementById('invoice-payment-method');
+    const custSelect = document.getElementById('invoice-customer-select');
+    if (paySelect && paySelect.value === 'Account' && (!custSelect || !custSelect.value || custSelect.value === 'cash')) {
+        alert(currentLang === 'en' ? 'Please select a customer account for Account payment!' : 'கடன் முறைக்கு வாடிக்கையாளர் கணக்கை தேர்ந்தெடுக்கவும்!');
+        if (custSelect) custSelect.focus();
+        return;
+    }
+
+    let nextNumber = 'INV-1001';
+    try {
+        const res = await API.get('/invoices/next-number');
+        if (res && res.nextInvoiceNumber) {
+            nextNumber = res.nextInvoiceNumber;
+        }
+    } catch(e) {
+        console.warn('Could not fetch next invoice number, using fallback', e);
+        nextNumber = document.getElementById('inv-number')?.innerText || 'INV-NEW';
+    }
+
+    const previewContainer = document.getElementById('receipt-preview-content');
+    if (previewContainer) {
+        previewContainer.innerHTML = generateReceiptHTML(nextNumber);
+        // Ensure active paper size class
+        if (currentThermalPaperSize === '58mm') {
+            previewContainer.classList.add('paper-58mm');
+            previewContainer.classList.remove('paper-80mm');
+        } else {
+            previewContainer.classList.add('paper-80mm');
+            previewContainer.classList.remove('paper-58mm');
+        }
+    }
+
+    const modal = document.getElementById('bill-preview-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+};
+
+window.closeBillPreview = function() {
+    const modal = document.getElementById('bill-preview-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.confirmPrintBill = async function() {
+    if (cart.length === 0) return;
+
+    const printBtn = document.getElementById('modal-print-btn');
+    const originalText = printBtn ? printBtn.innerHTML : '';
+    if (printBtn) {
+        printBtn.disabled = true;
+        printBtn.innerHTML = `<span>சேமித்து பிரிண்ட் ஆகிறது...</span>`;
+    }
+
+    const totalText = document.getElementById('cart-total').innerText.replace('₹', '');
+    const grandTotal = Number(totalText) || 0;
+    const subtotalText = document.getElementById('cart-subtotal').innerText.replace('₹', '');
+    const subtotal = Number(subtotalText) || grandTotal;
+
+    const discountInput = document.getElementById('cart-discount');
+    const discount = discountInput ? Math.max(0, Number(discountInput.value) || 0) : 0;
+
+    const custSelect = document.getElementById('invoice-customer-select');
+    let customerName = 'Cash Customer';
+    let accountId = null;
+    if (custSelect && custSelect.value !== 'cash' && custSelect.value !== '') {
+        const opt = custSelect.options[custSelect.selectedIndex];
+        customerName = opt.getAttribute('data-name') || opt.innerText;
+        accountId = Number(custSelect.value);
+    }
+
+    const paySelect = document.getElementById('invoice-payment-method');
+    const paymentMethod = paySelect ? paySelect.value : 'Cash';
+
+    if (paymentMethod === 'Account' && (!accountId || isNaN(accountId))) {
+        alert(currentLang === 'en' ? 'Please select a customer account for Account payment!' : 'கடன் முறைக்கு வாடிக்கையாளர் கணக்கை தேர்ந்தெடுக்கவும்!');
+        if (printBtn) {
+            printBtn.disabled = false;
+            printBtn.innerHTML = originalText;
+        }
+        closeBillPreview();
+        const sel = document.getElementById('invoice-customer-select');
+        if (sel) sel.focus();
+        return;
+    }
+
+    const checkoutItems = cart.map(item => {
+        let actualQty = item.rawQty;
+        if (item.unit_type === 'kg' && item.selectedUnit === 'g') actualQty = item.rawQty / 1000;
+        return {
+            id: item.id,
+            qty: actualQty,
+            price: item.selling_price
+        };
+    });
+
+    try {
+        const res = await API.post('/checkout', {
+            items: checkoutItems,
+            total_amount: grandTotal,
+            customer_name: customerName,
+            payment_method: paymentMethod,
+            subtotal: subtotal,
+            discount: discount,
+            account_id: accountId
+        });
+
+        if (res.success) {
+            // Update receipt HTML with finalized official invoice number
+            const previewContainer = document.getElementById('receipt-preview-content');
+            if (previewContainer) {
+                const invNumEls = previewContainer.querySelectorAll('.receipt-inv-num');
+                invNumEls.forEach(el => el.innerText = res.invoiceNumber);
+            }
+            document.getElementById('inv-number').innerText = res.invoiceNumber;
+
+            // Trigger thermal printer print command
+            window.print();
+
+            // Close modal after print
+            closeBillPreview();
+
+            // Update session metrics
+            todayInvoices++;
+            todaySales += grandTotal;
+            const tendered = Number(document.getElementById('cash-tendered').value || grandTotal);
+            todayCollected += tendered;
+
+            // Reset billing screen state
+            cart = [];
+            document.getElementById('cash-tendered').value = '0';
+            if (discountInput) discountInput.value = '0';
+            setupNewInvoice();
+            renderCart();
+            loadAllViewsData();
+        } else {
+            alert("Checkout failed: " + res.error);
+        }
+    } catch(err) {
+        alert("Checkout error: " + err.message);
+    } finally {
+        if (printBtn) {
+            printBtn.disabled = false;
+            printBtn.innerHTML = originalText;
+        }
+    }
+};
+
+async function handleCheckout() {
+    if (cart.length === 0) {
+        alert(currentLang === 'en' ? 'Cart is empty!' : 'கார்ட்டில் எந்த பொருளும் இல்லை!');
+        return;
+    }
+    openBillPreview();
+}
+
+function updateMetrics() {
+    document.getElementById('metric-sales').innerText = UI.formatCurrency(todaySales);
+    document.getElementById('metric-invoices').innerText = todayInvoices;
+    document.getElementById('metric-collected').innerText = UI.formatCurrency(todayCollected);
+}
+
+// --- STOCK ---
+function renderStockView() {
+    let products = currentProducts;
+    const searchEl = document.getElementById('stock-search');
+    const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    if (q) products = products.filter(p => (p.name_en && p.name_en.toLowerCase().includes(q)) || (p.name_ta && p.name_ta.includes(q)));
+
+    let totalInv = 0;
+    const tbody = document.getElementById('stock-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    products.forEach(p => {
+        const value = p.stock_quantity * p.cost_price;
+        totalInv += value;
+        const tr = document.createElement('tr');
+        const imgHtml = p.image_url 
+            ? `<img src="${p.image_url}" class="table-prod-thumb" alt="${p.name_en}" onerror="this.outerHTML='<div class=\\'table-prod-thumb-placeholder\\'>📦</div>'">` 
+            : `<div class="table-prod-thumb-placeholder">📦</div>`;
+
+        tr.innerHTML = `
+            <td>
+                <div class="table-prod-cell">
+                    ${imgHtml}
+                    <div>
+                        <b style="font-size: 15px;">${currentLang === 'en' ? p.name_en : p.name_ta}</b>
+                        <div class="text-muted" style="font-size: 12px;">${currentLang === 'en' ? p.name_ta : p.name_en}</div>
+                    </div>
+                </div>
+            </td>
+            <td><b>${p.stock_quantity}</b></td>
+            <td>${p.unit_type}</td>
+            <td>${UI.formatCurrency(value)}</td>
+            <td>
+                <button class="btn-sm btn-primary" onclick="openEditProductModal(${p.id})">
+                    ✏️ ${currentLang === 'en' ? 'Edit' : 'திருத்து'}
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('total-investment').innerText = UI.formatCurrency(totalInv);
+}
+
+// --- Edit Product Modal Logic ---
+window.openEditProductModal = function(id) {
+    const p = currentProducts.find(item => item.id == id);
+    if (!p) return;
+
+    document.getElementById('edit-prod-id').value = p.id;
+    document.getElementById('edit-prod-current-image-url').value = p.image_url || '';
+    document.getElementById('edit-prod-name-en').value = p.name_en || '';
+    document.getElementById('edit-prod-name-ta').value = p.name_ta || '';
+    document.getElementById('edit-prod-cost').value = p.cost_price || 0;
+    document.getElementById('edit-prod-price').value = p.selling_price || 0;
+    document.getElementById('edit-prod-unit').value = p.unit_type || 'pcs';
+
+    const imgPreview = document.getElementById('edit-prod-img-preview');
+    const noImgPlaceholder = document.getElementById('edit-prod-no-img');
+    const removeBtn = document.getElementById('edit-prod-remove-img');
+    const fileInput = document.getElementById('edit-prod-image-file');
+    if (fileInput) fileInput.value = '';
+
+    if (p.image_url) {
+        imgPreview.src = p.image_url;
+        imgPreview.style.display = 'block';
+        noImgPlaceholder.style.display = 'none';
+        removeBtn.style.display = 'inline-block';
+    } else {
+        imgPreview.src = '';
+        imgPreview.style.display = 'none';
+        noImgPlaceholder.style.display = 'flex';
+        removeBtn.style.display = 'none';
+    }
+
+    document.getElementById('edit-product-modal').classList.remove('hidden');
+};
+
+window.closeEditProductModal = function() {
+    document.getElementById('edit-product-modal').classList.add('hidden');
+};
+
+window.previewEditImage = function(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imgPreview = document.getElementById('edit-prod-img-preview');
+            const noImgPlaceholder = document.getElementById('edit-prod-no-img');
+            const removeBtn = document.getElementById('edit-prod-remove-img');
+            imgPreview.src = e.target.result;
+            imgPreview.style.display = 'block';
+            noImgPlaceholder.style.display = 'none';
+            removeBtn.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+window.removeEditProductImage = function() {
+    const fileInput = document.getElementById('edit-prod-image-file');
+    if (fileInput) fileInput.value = '';
+    document.getElementById('edit-prod-current-image-url').value = '';
+    const imgPreview = document.getElementById('edit-prod-img-preview');
+    const noImgPlaceholder = document.getElementById('edit-prod-no-img');
+    const removeBtn = document.getElementById('edit-prod-remove-img');
+    imgPreview.src = '';
+    imgPreview.style.display = 'none';
+    noImgPlaceholder.style.display = 'flex';
+    removeBtn.style.display = 'none';
+};
+
+window.saveEditProduct = async function() {
+    const id = document.getElementById('edit-prod-id').value;
+    const nameEn = document.getElementById('edit-prod-name-en').value.trim();
+    const nameTa = document.getElementById('edit-prod-name-ta').value.trim();
+    const cost = Number(document.getElementById('edit-prod-cost').value) || 0;
+    const price = Number(document.getElementById('edit-prod-price').value) || 0;
+    const unit = document.getElementById('edit-prod-unit').value;
+
+    if (!nameEn || !nameTa) {
+        alert(currentLang === 'en' ? 'Please enter both English and Tamil names!' : 'ஆங்கிலம் மற்றும் தமிழ் பெயர்கள் இரண்டையும் உள்ளிடவும்!');
+        return;
+    }
+
+    const saveBtn = document.getElementById('btn-save-edit-prod');
+    const originalText = saveBtn ? saveBtn.innerText : '';
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerText = currentLang === 'en' ? 'Saving...' : 'சேமிக்கப்படுகிறது...';
+    }
+
+    let finalImageUrl = document.getElementById('edit-prod-current-image-url').value;
+
+    const fileInput = document.getElementById('edit-prod-image-file');
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        try {
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.image_url) {
+                finalImageUrl = data.image_url;
+            }
+        } catch (err) {
+            console.error('Image upload failed', err);
+        }
+    }
+
+    try {
+        const updatePayload = {
+            name_en: nameEn,
+            name_ta: nameTa,
+            image_url: finalImageUrl || null,
+            cost_price: cost,
+            selling_price: price,
+            unit_type: unit
+        };
+
+        const res = await API.put(`/products/${id}`, updatePayload);
+        if (res.success) {
+            alert(currentLang === 'en' ? 'Item updated successfully!' : 'பொருள் விவரங்கள் புதுப்பிக்கப்பட்டன!');
+            closeEditProductModal();
+            loadAllViewsData();
+        } else {
+            alert("Update failed: " + (res.error || 'Unknown error'));
+        }
+    } catch(err) {
+        alert("Update error: " + err.message);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = originalText;
+        }
+    }
+};
+
+function renderRefillView() {
+    const tbody = document.getElementById('refill-tbody');
+    tbody.innerHTML = '';
+    
+    let products = currentProducts;
+    if(document.getElementById('refill-search')) {
+        const q = document.getElementById('refill-search').value.trim().toLowerCase();
+        if (q) products = products.filter(p => p.name_en.toLowerCase().includes(q) || p.name_ta.includes(q));
+    }
+
+    products.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${UI.getProductName(p)}</td>
+            <td>${p.stock_quantity} ${p.unit_type}</td>
+            <td><input type="number" step="0.01" id="add-qty-${p.id}" placeholder="0"></td>
+            <td><input type="date" id="add-exp-${p.id}" value="${p.expiry_date || ''}"></td>
+            <td><button class="btn-primary" onclick="submitRefill(${p.id})">${currentLang==='en'?'Update':'புதுப்பி'}</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.submitRefill = async function(id) {
+    const addQty = Number(document.getElementById(`add-qty-${id}`).value);
+    const newExp = document.getElementById(`add-exp-${id}`).value;
+    if (addQty <= 0 && !newExp) return;
+
+    try {
+        await API.put(`/products/${id}/stock`, { add_quantity: addQty, expiry_date: newExp });
+        alert(currentLang==='en'?"Stock Updated!":"இருப்பு புதுப்பிக்கப்பட்டது!");
+        loadAllViewsData();
+    } catch(err) {
+        alert("Update error: " + err.message);
+    }
+}
+
+function renderPriceView() {
+    const tbody = document.getElementById('price-tbody');
+    tbody.innerHTML = '';
+
+    currentProducts.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${UI.getProductName(p)} (${p.unit_type})</td>
+            <td><input type="number" step="0.01" id="cost-${p.id}" value="${p.cost_price}"></td>
+            <td><input type="number" step="0.01" id="price-${p.id}" value="${p.selling_price}"></td>
+            <td><button class="btn-primary" onclick="submitPrice(${p.id})">${currentLang==='en'?'Save':'சேமி'}</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.submitPrice = async function(id) {
+    const newCost = Number(document.getElementById(`cost-${id}`).value);
+    const newPrice = Number(document.getElementById(`price-${id}`).value);
+    
+    try {
+        await API.put(`/products/${id}/price`, { cost_price: newCost, selling_price: newPrice });
+        alert(currentLang==='en'?"Prices Saved!":"விலை சேமிக்கப்பட்டது!");
+        loadAllViewsData();
+    } catch(err) {
+        alert("Update error: " + err.message);
+    }
+}
+
+async function handleAddProduct(e) {
+    e.preventDefault();
+
+    let uploadedImageUrl = null;
+    const imageInput = document.getElementById('new-prod-image');
+    if (imageInput && imageInput.files && imageInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('image', imageInput.files[0]);
+        try {
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.image_url) {
+                uploadedImageUrl = data.image_url;
+            }
+        } catch (err) {
+            console.error('Image upload failed', err);
+        }
+    }
+
+    const newProd = {
+        name_en: document.getElementById('new-prod-name-en').value,
+        name_ta: document.getElementById('new-prod-name-ta').value,
+        unit_type: document.getElementById('new-prod-unit').value,
+        cost_price: Number(document.getElementById('new-prod-cost').value),
+        selling_price: Number(document.getElementById('new-prod-price').value),
+        stock_quantity: Number(document.getElementById('new-prod-stock').value),
+        expiry_date: document.getElementById('new-prod-expiry').value || null,
+        image_url: uploadedImageUrl
+    };
+
+    try {
+        await API.post('/products', newProd);
+        e.target.reset();
+        alert(currentLang === 'en' ? 'Product added!' : 'பொருள் சேர்க்கப்பட்டது!');
+        loadAllViewsData();
+    } catch(err) {
+        alert("Add error: " + err.message);
+    }
+}
+
+function checkExpiryAlerts() {
+    const today = new Date();
+    const bellIcon = document.getElementById('expiry-bell');
+    const alertsList = document.getElementById('alerts-list');
+    
+    if(!alertsList) return;
+    alertsList.innerHTML = '';
+    let hasAlerts = false;
+
+    currentProducts.forEach(item => {
+        if (item.expiry_date) {
+            const expDate = new Date(item.expiry_date);
+            const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays <= 3) {
+                hasAlerts = true;
+                const li = document.createElement('li');
+                if (diffDays >= 0) {
+                    li.innerText = `${UI.getProductName(item)} - ${item.stock_quantity} ${item.unit_type} (Expires in ${diffDays} days)`;
+                } else {
+                    li.innerText = `${UI.getProductName(item)} - ${item.stock_quantity} ${item.unit_type} (EXPIRED!)`;
+                }
+                alertsList.appendChild(li);
+            }
+        }
+    });
+
+    if (hasAlerts) {
+        bellIcon.classList.add('alerting');
+    } else {
+        bellIcon.classList.remove('alerting');
+        alertsList.innerHTML = `<li>${currentLang==='en'?'No items expiring soon.':'விரைவில் காலாவதியாகும் பொருட்கள் இல்லை.'}</li>`;
+    }
+}
+
+// --- PROFIT ANALYSIS ---
+window.renderProfitView = async function(range = 'today', customDate = null) {
+    if(!document.getElementById('profit-tbody')) return;
+    
+    let totalInv = 0;
+    currentProducts.forEach(p => {
+        totalInv += p.stock_quantity * p.cost_price;
+    });
+    document.getElementById('profit-total-investment').innerText = UI.formatCurrency(totalInv);
+    
+    try {
+        const sales = await API.get('/sales');
+        const today = new Date();
+        let filteredSales = [];
+        
+        sales.forEach(sale => {
+            const saleDate = new Date(sale.date);
+            let include = false;
+            
+            if (range === 'today') {
+                include = saleDate.toDateString() === today.toDateString();
+            } else if (range === 'yesterday') {
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                include = saleDate.toDateString() === yesterday.toDateString();
+            } else if (range === 'last-month') {
+                let lastMonth = today.getMonth() - 1;
+                let year = today.getFullYear();
+                if(lastMonth < 0) {
+                    lastMonth = 11;
+                    year--;
+                }
+                include = saleDate.getMonth() === lastMonth && saleDate.getFullYear() === year;
+            } else if (range === 'custom' && customDate) {
+                const saleIsoDate = sale.date.split('T')[0];
+                include = saleIsoDate === customDate;
+            }
+            
+            if(include) filteredSales.push(sale);
+        });
+        
+        const tbody = document.getElementById('profit-tbody');
+        tbody.innerHTML = '';
+        
+        let totalProfit = 0;
+        
+        filteredSales.forEach(sale => {
+            let saleCost = 0;
+            sale.items.forEach(item => {
+                saleCost += item.cost * item.qty;
+            });
+            
+            const saleProfit = sale.total - saleCost;
+            totalProfit += saleProfit;
+            
+            const tr = document.createElement('tr');
+            const dateStr = new Date(sale.date).toLocaleString(currentLang === 'en' ? 'en-US' : 'ta-IN');
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td>${sale.id}</td>
+                <td>${UI.formatCurrency(sale.total)}</td>
+                <td>${UI.formatCurrency(saleCost)}</td>
+                <td class="${saleProfit >= 0 ? 'text-success' : 'text-danger'}">${UI.formatCurrency(saleProfit)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        document.getElementById('profit-amount').innerText = UI.formatCurrency(totalProfit);
+        document.getElementById('profit-amount').className = totalProfit >= 0 ? 'text-success' : 'text-danger';
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+// --- INVOICES VIEW ---
+window.renderInvoicesView = async function(range = 'today', customDate = null) {
+    if(!document.getElementById('invoices-tbody')) return;
+    
+    try {
+        const sales = await API.get('/sales');
+        allSalesCache = sales || [];
+        const today = new Date();
+        let filteredSales = [];
+        
+        sales.forEach(sale => {
+            const saleDate = new Date(sale.date);
+            let include = false;
+            
+            if (range === 'today') {
+                include = saleDate.toDateString() === today.toDateString();
+            } else if (range === 'yesterday') {
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                include = saleDate.toDateString() === yesterday.toDateString();
+            } else if (range === 'last-month') {
+                let lastMonth = today.getMonth() - 1;
+                let year = today.getFullYear();
+                if(lastMonth < 0) {
+                    lastMonth = 11;
+                    year--;
+                }
+                include = saleDate.getMonth() === lastMonth && saleDate.getFullYear() === year;
+            } else if (range === 'custom' && customDate) {
+                const saleIsoDate = sale.date.split('T')[0];
+                include = saleIsoDate === customDate;
+            }
+            
+            if(include) filteredSales.push(sale);
+        });
+        
+        const tbody = document.getElementById('invoices-tbody');
+        tbody.innerHTML = '';
+        
+        filteredSales.sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        filteredSales.forEach(sale => {
+            let totalItems = 0;
+            if (sale.items) {
+                sale.items.forEach(item => totalItems += Number(item.qty) || 0);
+            }
+            
+            const tr = document.createElement('tr');
+            tr.className = 'invoice-row-clickable';
+            tr.title = currentLang === 'en' ? 'Click to view full invoice' : 'முழு பில்லை பார்க்க கிளிக் செய்யவும்';
+            tr.onclick = () => openInvoiceModal(sale.id);
+
+            const dateStr = formatToDDMMYYYY(sale.date, true);
+            const payMethod = sale.payment_method || 'Cash';
+            const payBadgeClass = `badge badge-${payMethod.toLowerCase()}`;
+            const payLabel = payMethod === 'Account' ? (currentLang==='en'?'Account':'கடன்') : payMethod === 'UPI' ? 'UPI' : (currentLang==='en'?'Cash':'ரொக்கம்');
+
+            tr.innerHTML = `
+                <td><b style="font-family: monospace;">${dateStr}</b></td>
+                <td><b>${sale.id}</b></td>
+                <td>${sale.customer_name || 'Cash Customer'}</td>
+                <td><span class="${payBadgeClass}">${payLabel}</span></td>
+                <td>${totalItems}</td>
+                <td class="text-blue"><b>${UI.formatCurrency(sale.total)}</b></td>
+                <td>
+                    <button class="btn-sm btn-outline-primary" onclick="event.stopPropagation(); openInvoiceModal('${sale.id}')">
+                        👁️ ${currentLang==='en'?'View':'பார்க்க'}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// --- Invoice Details Modal Controls ---
+window.openInvoiceModal = async function(invNum) {
+    let sale = allSalesCache.find(s => s.id === invNum);
+    if (!sale) {
+        try {
+            sale = await API.get(`/invoices/${invNum}`);
+        } catch(e) {
+            console.error(e);
+        }
+    }
+    if (!sale) {
+        alert(currentLang === 'en' ? 'Invoice details not found' : 'பில் விவரங்கள் கிடைக்கவில்லை');
+        return;
+    }
+
+    currentModalInvoice = sale;
+
+    document.getElementById('inv-modal-number').innerText = sale.id;
+    document.getElementById('inv-modal-date').innerText = formatToDDMMYYYY(sale.date, true);
+    document.getElementById('inv-modal-customer').innerText = sale.customer_name || 'Cash Customer';
+    
+    const payMethod = sale.payment_method || 'Cash';
+    document.getElementById('inv-modal-payment').innerText = payMethod;
+    
+    const badgeEl = document.getElementById('inv-modal-payment-badge');
+    if (badgeEl) {
+        badgeEl.className = `badge badge-${payMethod.toLowerCase()}`;
+        badgeEl.innerText = payMethod === 'Account' ? (currentLang==='en'?'Account':'கடன்') : payMethod === 'UPI' ? 'UPI' : (currentLang==='en'?'Cash':'ரொக்கம்');
+    }
+
+    const alertBox = document.getElementById('inv-modal-account-alert');
+    const alertText = document.getElementById('inv-modal-account-alert-text');
+    if (payMethod === 'Account') {
+        alertBox.style.display = 'flex';
+        alertText.innerText = currentLang === 'en' 
+            ? `Billed to Customer Credit Account: ${sale.customer_name}` 
+            : `வாடிக்கையாளர் கடன் கணக்கில் சேர்க்கப்பட்டது: ${sale.customer_name}`;
+    } else {
+        alertBox.style.display = 'none';
+    }
+
+    const tbody = document.getElementById('inv-modal-items-tbody');
+    tbody.innerHTML = '';
+
+    if (sale.items && sale.items.length > 0) {
+        sale.items.forEach((item, idx) => {
+            const tr = document.createElement('tr');
+            const itemName = currentLang === 'en' 
+                ? (item.name_en || item.name_ta || `Item #${item.id || idx+1}`) 
+                : (item.name_ta || item.name_en || `பொருள் #${item.id || idx+1}`);
+            const itemTotal = Number(item.price) * Number(item.qty);
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td>
+                    <b>${itemName}</b>
+                    ${item.name_en && item.name_ta && item.name_en !== item.name_ta ? `<div class="text-muted" style="font-size:12px;">${currentLang === 'en' ? item.name_ta : item.name_en}</div>` : ''}
+                </td>
+                <td>${item.qty} ${item.unit_type || ''}</td>
+                <td>₹${Number(item.price).toFixed(2)}</td>
+                <td><b>₹${itemTotal.toFixed(2)}</b></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } else {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 15px; color: var(--text-muted);">No items recorded</td></tr>`;
+    }
+
+    const subtotal = sale.subtotal !== null && sale.subtotal !== undefined ? Number(sale.subtotal) : Number(sale.total);
+    const discount = Number(sale.discount) || 0;
+    const total = Number(sale.total);
+
+    document.getElementById('inv-modal-subtotal').innerText = UI.formatCurrency(subtotal);
+    const discLine = document.getElementById('inv-modal-discount-line');
+    if (discount > 0) {
+        document.getElementById('inv-modal-discount').innerText = `-₹${discount.toFixed(2)}`;
+        discLine.style.display = 'flex';
+    } else {
+        discLine.style.display = 'none';
+    }
+    document.getElementById('inv-modal-total').innerText = UI.formatCurrency(total);
+
+    document.getElementById('invoice-details-modal').classList.remove('hidden');
+};
+
+window.closeInvoiceModal = function() {
+    document.getElementById('invoice-details-modal').classList.add('hidden');
+};
+
+window.printInvoiceFromModal = function() {
+    if (!currentModalInvoice) return;
+    const previewContainer = document.getElementById('receipt-preview-content');
+    if (previewContainer) {
+        previewContainer.innerHTML = generateReceiptHTMLForSale(currentModalInvoice);
+        if (currentThermalPaperSize === '58mm') {
+            previewContainer.classList.add('paper-58mm');
+            previewContainer.classList.remove('paper-80mm');
+        } else {
+            previewContainer.classList.add('paper-80mm');
+            previewContainer.classList.remove('paper-58mm');
+        }
+    }
+    closeInvoiceModal();
+    const billModal = document.getElementById('bill-preview-modal');
+    if (billModal) billModal.classList.remove('hidden');
+};
+
+function generateReceiptHTMLForSale(sale) {
+    const dateTimeStr = formatToDDMMYYYY(sale.date, true);
+    const customerName = sale.customer_name || 'Cash Customer';
+    const paymentMethod = sale.payment_method || 'Cash';
+
+    let paymentMethodName = 'ரொக்கம் (Cash)';
+    if (paymentMethod === 'Account') paymentMethodName = 'கடன் (Account)';
+    else if (paymentMethod === 'UPI') paymentMethodName = 'UPI (ஆன்லைன்)';
+
+    const itemsHtml = (sale.items || []).map(item => {
+        const lineTotal = Number(item.price) * Number(item.qty);
+        let nameLine = item.name_ta && item.name_en && item.name_ta !== item.name_en 
+            ? `${item.name_ta} (${item.name_en})` 
+            : (item.name_ta || item.name_en || 'பொருள்');
+        let qtyRate = `${item.qty} ${item.unit_type || ''} x ₹${Number(item.price).toFixed(2)}`;
+
+        return `
+            <div class="receipt-item-row">
+                <div class="receipt-item-name">${nameLine}</div>
+                <div class="receipt-item-details">
+                    <span class="receipt-item-qty-rate">${qtyRate}</span>
+                    <span class="receipt-item-dots"></span>
+                    <span class="receipt-item-total">₹${lineTotal.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const subtotal = sale.subtotal !== null && sale.subtotal !== undefined ? Number(sale.subtotal) : Number(sale.total);
+    const discount = Number(sale.discount) || 0;
+    const grandTotal = Number(sale.total);
+
+    return `
+        <div class="receipt-header notranslate" translate="no">
+            <div class="receipt-header-title notranslate" translate="no">ராஜா நாட்டு மருந்து & பலசரக்கு கடை</div>
+            <div class="receipt-header-sub notranslate" translate="no">(Raja Naatu Marundhu & Palasarakku Kadai)</div>
+        </div>
+
+        <div class="receipt-meta notranslate" translate="no">
+            <div class="receipt-meta-row">
+                <span class="receipt-meta-label">பில் எண் (Bill Serial):</span>
+                <span class="receipt-meta-val receipt-inv-num">${sale.id}</span>
+            </div>
+            <div class="receipt-meta-row">
+                <span class="receipt-meta-label">தேதி (Date & Time):</span>
+                <span class="receipt-meta-val">${dateTimeStr}</span>
+            </div>
+            <div class="receipt-meta-row">
+                <span class="receipt-meta-label">வாடிக்கையாளர் (Customer):</span>
+                <span class="receipt-meta-val">${customerName}</span>
+            </div>
+        </div>
+
+        <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+
+        <div class="receipt-items-list notranslate" translate="no">
+            ${itemsHtml}
+        </div>
+
+        <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+
+        <div class="receipt-summary notranslate" translate="no">
+            <div class="receipt-sum-row">
+                <span>உப மொத்தம் (Subtotal):</span>
+                <span class="font-bold">₹${subtotal.toFixed(2)}</span>
+            </div>
+            ${discount > 0 ? `
+            <div class="receipt-sum-row">
+                <span>தள்ளுபடி (Discount):</span>
+                <span>-₹${discount.toFixed(2)}</span>
+            </div>` : ''}
+            <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+            <div class="receipt-grand-total notranslate" translate="no">
+                <span>மொத்தம் (Grand Total):</span>
+                <span>₹${grandTotal.toFixed(2)}</span>
+            </div>
+            <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+            <div class="receipt-sum-row">
+                <span>பணம் முறை (Payment Method):</span>
+                <span class="font-bold">${paymentMethodName}</span>
+            </div>
+        </div>
+
+        <div class="receipt-divider notranslate" translate="no">--------------------------------</div>
+
+        <div class="receipt-footer notranslate" translate="no">
+            <div class="receipt-footer-ta notranslate" translate="no">நன்றி! மீண்டும் வருக!</div>
+            <div class="receipt-footer-en notranslate" translate="no">(Thank You! Visit Again!)</div>
+        </div>
+        <div class="thermal-paper-tear"></div>
+    `;
+}
+
+// --- ACCOUNTS ---
+window.switchAccountTab = function(tab) {
+    currentAccountsTab = tab;
+    document.getElementById('tab-btn-active').classList.toggle('active', tab === 'active');
+    document.getElementById('tab-btn-history').classList.toggle('active', tab === 'history');
+    renderAccountsView();
+}
+
+window.renderAccountsView = async function() {
+    if(!document.getElementById('accounts-tbody')) return;
+    
+    try {
+        let endpoint = currentAccountsTab === 'active' ? '/accounts' : '/accounts/history';
+        let accounts = await API.get(endpoint);
+        
+        const q = document.getElementById('account-search').value.trim().toLowerCase();
+        if (q) {
+            accounts = accounts.filter(a => a.customer_name.toLowerCase().includes(q));
+        }
+        
+        const tbody = document.getElementById('accounts-tbody');
+        tbody.innerHTML = '';
+        
+        accounts.forEach(acc => {
+            const tr = document.createElement('tr');
+            let actionBtn = '';
+            
+            if (currentAccountsTab === 'active') {
+                actionBtn = `<button class="btn-primary" onclick="openPaymentModal(${acc.id}, ${acc.balance_amount})" style="padding: 6px 12px; font-size:14px; margin-right: 5px;">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:white;vertical-align:bottom;margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>${currentLang==='en'?'Edit / Pay':'செலுத்து'}
+                </button>`;
+            } else {
+                actionBtn = `<span class="text-success" style="font-weight:bold; padding: 6px 12px; background: #d1fae5; border-radius: 4px;">FINISHED</span>`;
+            }
+
+            tr.innerHTML = `
+                <td>${acc.customer_name}</td>
+                <td>${new Date(acc.start_date).toLocaleDateString()}</td>
+                <td><b>${UI.formatCurrency(acc.balance_amount)}</b></td>
+                <td>
+                    ${actionBtn}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+window.populateInvoicesDropdown = async function() {
+    const select = document.getElementById('acc-invoice');
+    if(!select) return;
+    
+    try {
+        const sales = await API.get('/sales');
+        select.innerHTML = '<option value="">-- Select Invoice --</option>';
+        
+        const recent = sales.slice(0, 20);
+        recent.forEach(sale => {
+            const dateStr = new Date(sale.date).toLocaleDateString();
+            const opt = document.createElement('option');
+            opt.value = sale.id;
+            opt.innerText = `${sale.id} - ${dateStr} - ${UI.formatCurrency(sale.total)}`;
+            opt.setAttribute('data-total', sale.total);
+            select.appendChild(opt);
+        });
+    } catch(err) {}
+}
+
+window.handleNewAccount = async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('acc-name').value;
+    const date = document.getElementById('acc-date').value;
+    let initialBalance = Number(document.getElementById('acc-balance').value);
+    
+    const invoiceSelect = document.getElementById('acc-invoice');
+    
+    if (invoiceSelect.value) {
+        const selectedOption = invoiceSelect.options[invoiceSelect.selectedIndex];
+        const invoiceTotal = Number(selectedOption.getAttribute('data-total'));
+        initialBalance += invoiceTotal;
+    }
+    
+    try {
+        await API.post('/accounts', { customer_name: name, start_date: date, balance_amount: initialBalance });
+        e.target.reset();
+        alert(currentLang === 'en' ? 'Account created successfully!' : 'கணக்கு வெற்றிகரமாக உருவாக்கப்பட்டது!');
+        UI.switchView('accounts-view');
+    } catch (err) {
+        alert("Account creation error: " + err.message);
+    }
+}
+
+// Payment Modal Logic
+window.openPaymentModal = function(id, balance) {
+    document.getElementById('modal-account-id').value = id;
+    document.getElementById('modal-current-balance').innerText = UI.formatCurrency(balance);
+    document.getElementById('modal-paid-amount').value = '';
+    document.getElementById('payment-modal').classList.remove('hidden');
+}
+
+window.closePaymentModal = function() {
+    document.getElementById('payment-modal').classList.add('hidden');
+}
+
+window.submitPayment = async function() {
+    const id = document.getElementById('modal-account-id').value;
+    const paid = Number(document.getElementById('modal-paid-amount').value);
+    
+    if(!paid || paid <= 0) return;
+    
+    try {
+        const res = await API.post(`/accounts/${id}/pay`, { paid_amount: paid });
+        if (res.success) {
+            alert(currentLang === 'en' ? 'Payment Successful!' : 'பணம் வெற்றிகரமாக செலுத்தப்பட்டது!');
+            closePaymentModal();
+            renderAccountsView();
+            loadCustomerAccountsForBilling();
+        } else {
+            alert("Payment Error: " + (res.error || 'Failed'));
+        }
+    } catch(err) {
+        alert("Payment Error: " + err.message);
+    }
+}
+
+</script>
+</body>
+
+</html>
